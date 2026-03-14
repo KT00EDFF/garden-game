@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useGarden } from "./hooks/useGarden";
 import { Header } from "./components/Header";
 import { GardenView } from "./components/GardenView";
@@ -8,6 +8,16 @@ import { Alerts } from "./components/Alerts";
 import { Settings } from "./components/Settings";
 import { PlantCard } from "./components/PlantCard";
 import { Onboarding } from "./components/Onboarding";
+import { Achievements } from "./components/Achievements";
+import { AchievementToast } from "./components/AchievementToast";
+import {
+  evaluateAchievements,
+  loadUnlocked,
+  saveUnlocked,
+  getTotalXP,
+  type Achievement,
+  type UnlockedAchievement,
+} from "./engine/achievements";
 
 const ONBOARDING_KEY = "garden-game-onboarded";
 
@@ -29,9 +39,27 @@ function App() {
   } = useGarden();
 
   const [showSettings, setShowSettings] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(
     () => !localStorage.getItem(ONBOARDING_KEY)
   );
+  const [unlockedAchievements, setUnlockedAchievements] = useState<UnlockedAchievement[]>(loadUnlocked);
+  const [toastQueue, setToastQueue] = useState<Achievement[]>([]);
+
+  // Evaluate achievements whenever garden changes
+  useEffect(() => {
+    const { unlocked, newlyUnlocked } = evaluateAchievements(garden, unlockedAchievements);
+    if (newlyUnlocked.length > 0) {
+      setUnlockedAchievements(unlocked);
+      saveUnlocked(unlocked);
+      setToastQueue((prev) => [...prev, ...newlyUnlocked]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [garden.plantings]);
+
+  const dismissToast = useCallback(() => {
+    setToastQueue((prev) => prev.slice(1));
+  }, []);
   const [inspectedTile, setInspectedTile] = useState<{
     bedId: string;
     tileX: number;
@@ -57,6 +85,8 @@ function App() {
         garden={garden}
         onClearAll={clearAll}
         onOpenSettings={() => setShowSettings(true)}
+        onOpenAchievements={() => setShowAchievements(true)}
+        totalXP={getTotalXP(unlockedAchievements)}
         plans={plans}
         activePlanId={activePlanId}
         onSwitchPlan={switchPlan}
@@ -119,6 +149,21 @@ function App() {
           garden={garden}
           onUpdate={updateGarden}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {toastQueue.length > 0 && (
+        <AchievementToast
+          key={toastQueue[0].id}
+          achievement={toastQueue[0]}
+          onDone={dismissToast}
+        />
+      )}
+
+      {showAchievements && (
+        <Achievements
+          unlocked={unlockedAchievements}
+          onClose={() => setShowAchievements(false)}
         />
       )}
 

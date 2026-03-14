@@ -143,7 +143,7 @@ garden-game/
 ---
 
 ## Future Phases (V2+)
-- Achievements & XP system ("First Seed Started", "Full Garden Plan", "Companion Master")
+- [x] Achievements & XP system (12 achievements, XP bar, toast notifications)
 - Succession planting (multiple sow dates for same crop)
 - Harvest log (track actual yields)
 - Crop rotation memory (year-over-year tracking)

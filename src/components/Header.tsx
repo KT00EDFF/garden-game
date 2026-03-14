@@ -6,6 +6,8 @@ interface HeaderProps {
   garden: GardenState;
   onClearAll: () => void;
   onOpenSettings: () => void;
+  onOpenAchievements: () => void;
+  totalXP: number;
   plans: PlanMeta[];
   activePlanId: string;
   onSwitchPlan: (planId: string) => void;
@@ -17,6 +19,8 @@ export function Header({
   garden,
   onClearAll,
   onOpenSettings,
+  onOpenAchievements,
+  totalXP,
   plans,
   activePlanId,
   onSwitchPlan,
@@ -121,6 +125,12 @@ export function Header({
               </div>
             )}
           </div>
+          <button
+            onClick={onOpenAchievements}
+            className="text-[7px] text-accent bg-accent/10 border border-accent/30 px-2 py-1 rounded-sm hover:bg-accent/20 transition-colors"
+          >
+            {totalXP} XP
+          </button>
           <button
             onClick={onOpenSettings}
             className="text-[7px] text-text-secondary border border-text-secondary/30 px-2 py-1 rounded-sm hover:bg-panel-light hover:text-text-primary transition-colors"
