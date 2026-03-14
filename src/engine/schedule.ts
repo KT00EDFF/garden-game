@@ -75,6 +75,41 @@ export function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+/**
+ * Generate multiple schedules for succession planting.
+ * Returns the base schedule plus shifted copies for each succession round.
+ */
+export function calculateSuccessionSchedules(
+  plant: Plant,
+  lastFrostDate: string,
+  firstFrostDate: string,
+  intervalWeeks: number,
+  count: number
+): { schedule: PlantSchedule; round: number }[] {
+  const base = calculateSchedule(plant, lastFrostDate, firstFrostDate);
+  const results = [{ schedule: base, round: 0 }];
+  const firstFrost = new Date(firstFrostDate);
+
+  for (let i = 1; i <= count; i++) {
+    const offset = intervalWeeks * i;
+    const shifted: PlantSchedule = {
+      startIndoors: base.startIndoors ? addWeeks(base.startIndoors, offset) : null,
+      sowOutdoors: base.sowOutdoors ? addWeeks(base.sowOutdoors, offset) : null,
+      transplant: base.transplant ? addWeeks(base.transplant, offset) : null,
+      harvestStart: base.harvestStart ? addWeeks(base.harvestStart, offset) : null,
+      harvestEnd: base.harvestEnd
+        ? new Date(Math.min(addWeeks(base.harvestEnd, offset).getTime(), firstFrost.getTime()))
+        : null,
+    };
+    // Skip if the sow/transplant date is past first frost
+    const sowDate = shifted.transplant || shifted.sowOutdoors;
+    if (sowDate && sowDate > firstFrost) break;
+    results.push({ schedule: shifted, round: i });
+  }
+
+  return results;
+}
+
 export function getWeekActions(
   plants: Plant[],
   lastFrostDate: string,

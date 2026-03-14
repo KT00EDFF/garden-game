@@ -43,6 +43,13 @@ export interface PlacedPlant {
   tileY: number;
 }
 
+export interface SuccessionPlan {
+  id: string;
+  plantId: string;
+  intervalWeeks: number;
+  count: number; // number of additional sowings after the first
+}
+
 export interface GardenState {
   name: string;
   zone: string;
@@ -51,4 +58,5 @@ export interface GardenState {
   firstFrostDate: string; // ISO date
   beds: BedConfig[];
   plantings: PlacedPlant[];
+  successions?: SuccessionPlan[];
 }

@@ -125,6 +125,36 @@ export function useGarden() {
     setGarden((prev) => ({ ...prev, ...updates }));
   }, []);
 
+  const setSuccession = useCallback(
+    (plantId: string, intervalWeeks: number, count: number) => {
+      setGarden((prev) => {
+        const successions = prev.successions || [];
+        const existing = successions.findIndex((s) => s.plantId === plantId);
+        const updated = [...successions];
+        const plan = {
+          id: `succ-${plantId}`,
+          plantId,
+          intervalWeeks,
+          count,
+        };
+        if (existing >= 0) {
+          updated[existing] = plan;
+        } else {
+          updated.push(plan);
+        }
+        return { ...prev, successions: updated };
+      });
+    },
+    []
+  );
+
+  const removeSuccession = useCallback((plantId: string) => {
+    setGarden((prev) => ({
+      ...prev,
+      successions: (prev.successions || []).filter((s) => s.plantId !== plantId),
+    }));
+  }, []);
+
   const switchPlan = useCallback((planId: string) => {
     setActivePlanId(planId);
     setActivePlan(planId);
@@ -166,5 +196,7 @@ export function useGarden() {
     switchPlan,
     addPlan,
     removePlan,
+    setSuccession,
+    removeSuccession,
   };
 }

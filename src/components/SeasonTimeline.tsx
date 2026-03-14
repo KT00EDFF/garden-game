@@ -1,6 +1,6 @@
 import type { GardenState } from "../types";
 import { plantsById } from "../data/plants";
-import { calculateSchedule, formatDate } from "../engine/schedule";
+import { calculateSchedule, calculateSuccessionSchedules, formatDate } from "../engine/schedule";
 
 interface SeasonTimelineProps {
   garden: GardenState;
@@ -107,11 +107,19 @@ export function SeasonTimeline({ garden }: SeasonTimelineProps) {
           const plant = plantsById[plantId];
           if (!plant) return null;
 
-          const schedule = calculateSchedule(
-            plant,
-            garden.lastFrostDate,
-            garden.firstFrostDate
+          const succession = (garden.successions || []).find(
+            (s) => s.plantId === plantId
           );
+
+          const schedules = succession
+            ? calculateSuccessionSchedules(
+                plant,
+                garden.lastFrostDate,
+                garden.firstFrostDate,
+                succession.intervalWeeks,
+                succession.count
+              )
+            : [{ schedule: calculateSchedule(plant, garden.lastFrostDate, garden.firstFrostDate), round: 0 }];
 
           const count = garden.plantings.filter((p) => p.plantId === plantId).length;
 
@@ -122,42 +130,52 @@ export function SeasonTimeline({ garden }: SeasonTimelineProps) {
                 <span className="text-[7px] text-text-primary truncate">
                   {plant.name}
                 </span>
-                <span className="text-[6px] text-text-secondary">x{count}</span>
+                <span className="text-[6px] text-text-secondary">
+                  x{count}
+                  {succession ? ` (${schedules.length}s)` : ""}
+                </span>
               </div>
               <div className="relative flex-1 h-3 bg-panel-light rounded-sm">
-                {/* Start indoors bar */}
-                {schedule.startIndoors && schedule.transplant && (
-                  <div
-                    className="absolute h-full bg-water/60 rounded-sm"
-                    style={{
-                      left: `${dateToPercent(schedule.startIndoors)}%`,
-                      width: `${dateToPercent(schedule.transplant) - dateToPercent(schedule.startIndoors)}%`,
-                    }}
-                    title={`Start indoors: ${formatDate(schedule.startIndoors)}`}
-                  />
-                )}
-                {/* Growing bar */}
-                {(schedule.transplant || schedule.sowOutdoors) && schedule.harvestStart && (
-                  <div
-                    className="absolute h-full bg-success/60 rounded-sm"
-                    style={{
-                      left: `${dateToPercent((schedule.transplant || schedule.sowOutdoors)!)}%`,
-                      width: `${dateToPercent(schedule.harvestStart) - dateToPercent((schedule.transplant || schedule.sowOutdoors)!)}%`,
-                    }}
-                    title={`Growing: ${formatDate((schedule.transplant || schedule.sowOutdoors)!)} - ${formatDate(schedule.harvestStart)}`}
-                  />
-                )}
-                {/* Harvest bar */}
-                {schedule.harvestStart && schedule.harvestEnd && (
-                  <div
-                    className="absolute h-full bg-accent/60 rounded-sm"
-                    style={{
-                      left: `${dateToPercent(schedule.harvestStart)}%`,
-                      width: `${dateToPercent(schedule.harvestEnd) - dateToPercent(schedule.harvestStart)}%`,
-                    }}
-                    title={`Harvest: ${formatDate(schedule.harvestStart)} - ${formatDate(schedule.harvestEnd)}`}
-                  />
-                )}
+                {schedules.map(({ schedule, round }) => {
+                  const opacity = round === 0 ? 1 : 0.5 + 0.5 / (round + 1);
+                  return (
+                    <div key={round} style={{ opacity }}>
+                      {/* Start indoors bar */}
+                      {schedule.startIndoors && schedule.transplant && (
+                        <div
+                          className="absolute h-full bg-water/60 rounded-sm"
+                          style={{
+                            left: `${dateToPercent(schedule.startIndoors)}%`,
+                            width: `${Math.max(0.5, dateToPercent(schedule.transplant) - dateToPercent(schedule.startIndoors))}%`,
+                          }}
+                          title={`${round > 0 ? `Round ${round + 1}: ` : ""}Start indoors: ${formatDate(schedule.startIndoors)}`}
+                        />
+                      )}
+                      {/* Growing bar */}
+                      {(schedule.transplant || schedule.sowOutdoors) && schedule.harvestStart && (
+                        <div
+                          className="absolute h-full bg-success/60 rounded-sm"
+                          style={{
+                            left: `${dateToPercent((schedule.transplant || schedule.sowOutdoors)!)}%`,
+                            width: `${Math.max(0.5, dateToPercent(schedule.harvestStart) - dateToPercent((schedule.transplant || schedule.sowOutdoors)!))}%`,
+                          }}
+                          title={`${round > 0 ? `Round ${round + 1}: ` : ""}Growing: ${formatDate((schedule.transplant || schedule.sowOutdoors)!)} - ${formatDate(schedule.harvestStart)}`}
+                        />
+                      )}
+                      {/* Harvest bar */}
+                      {schedule.harvestStart && schedule.harvestEnd && (
+                        <div
+                          className="absolute h-full bg-accent/60 rounded-sm"
+                          style={{
+                            left: `${dateToPercent(schedule.harvestStart)}%`,
+                            width: `${Math.max(0.5, dateToPercent(schedule.harvestEnd) - dateToPercent(schedule.harvestStart))}%`,
+                          }}
+                          title={`${round > 0 ? `Round ${round + 1}: ` : ""}Harvest: ${formatDate(schedule.harvestStart)} - ${formatDate(schedule.harvestEnd)}`}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );

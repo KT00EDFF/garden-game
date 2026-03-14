@@ -36,6 +36,8 @@ function App() {
     switchPlan,
     addPlan,
     removePlan,
+    setSuccession,
+    removeSuccession,
   } = useGarden();
 
   const [showSettings, setShowSettings] = useState(false);
@@ -182,6 +184,9 @@ function App() {
           plantings={garden.plantings}
           bedSun={inspectedBed.sunExposure || "full"}
           zone={garden.zone}
+          succession={(garden.successions || []).find(
+            (s) => s.plantId === inspectedPlanting.plantId
+          )}
           onRemove={() => {
             removePlant(
               inspectedPlanting.bedId,
@@ -191,6 +196,8 @@ function App() {
             setInspectedTile(null);
           }}
           onClose={() => setInspectedTile(null)}
+          onSetSuccession={setSuccession}
+          onRemoveSuccession={removeSuccession}
         />
       )}
     </div>

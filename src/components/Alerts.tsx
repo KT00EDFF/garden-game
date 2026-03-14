@@ -1,6 +1,6 @@
 import type { GardenState } from "../types";
 import { plantsById } from "../data/plants";
-import { calculateSchedule, formatDate } from "../engine/schedule";
+import { calculateSchedule, calculateSuccessionSchedules, formatDate } from "../engine/schedule";
 
 interface AlertsProps {
   garden: GardenState;
@@ -26,45 +26,54 @@ export function Alerts({ garden }: AlertsProps) {
     const plant = plantsById[plantId];
     if (!plant) continue;
 
-    const schedule = calculateSchedule(
-      plant,
-      garden.lastFrostDate,
-      garden.firstFrostDate
+    const succession = (garden.successions || []).find(
+      (s) => s.plantId === plantId
     );
 
-    const checks: { date: Date | null; action: string }[] = [
-      { date: schedule.startIndoors, action: "Start seeds indoors" },
-      { date: schedule.sowOutdoors, action: "Direct sow outdoors" },
-      { date: schedule.transplant, action: "Transplant outdoors" },
-      { date: schedule.harvestStart, action: "Begin harvesting" },
-    ];
+    const schedules = succession
+      ? calculateSuccessionSchedules(
+          plant,
+          garden.lastFrostDate,
+          garden.firstFrostDate,
+          succession.intervalWeeks,
+          succession.count
+        )
+      : [{ schedule: calculateSchedule(plant, garden.lastFrostDate, garden.firstFrostDate), round: 0 }];
 
-    for (const check of checks) {
-      if (!check.date) continue;
+    for (const { schedule, round } of schedules) {
+      const roundLabel = round > 0 ? ` (round ${round + 1})` : "";
+      const checks: { date: Date | null; action: string }[] = [
+        { date: schedule.startIndoors, action: `Start seeds indoors${roundLabel}` },
+        { date: schedule.sowOutdoors, action: `Direct sow outdoors${roundLabel}` },
+        { date: schedule.transplant, action: `Transplant outdoors${roundLabel}` },
+        { date: schedule.harvestStart, action: `Begin harvesting${roundLabel}` },
+      ];
 
-      let urgency: Action["urgency"] | null = null;
-      if (check.date <= now) {
-        // Already past but within last 2 weeks — still relevant
-        const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-        if (check.date >= twoWeeksAgo) urgency = "now";
-      } else if (check.date <= twoWeeks) {
-        urgency = "now";
-      } else if (check.date <= fourWeeks) {
-        urgency = "soon";
-      } else {
-        // Only show upcoming within 8 weeks
-        const eightWeeks = new Date(now.getTime() + 56 * 24 * 60 * 60 * 1000);
-        if (check.date <= eightWeeks) urgency = "upcoming";
-      }
+      for (const check of checks) {
+        if (!check.date) continue;
 
-      if (urgency) {
-        actions.push({
-          emoji: plant.emoji,
-          plantName: plant.name,
-          action: check.action,
-          date: check.date,
-          urgency,
-        });
+        let urgency: Action["urgency"] | null = null;
+        if (check.date <= now) {
+          const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+          if (check.date >= twoWeeksAgo) urgency = "now";
+        } else if (check.date <= twoWeeks) {
+          urgency = "now";
+        } else if (check.date <= fourWeeks) {
+          urgency = "soon";
+        } else {
+          const eightWeeks = new Date(now.getTime() + 56 * 24 * 60 * 60 * 1000);
+          if (check.date <= eightWeeks) urgency = "upcoming";
+        }
+
+        if (urgency) {
+          actions.push({
+            emoji: plant.emoji,
+            plantName: plant.name,
+            action: check.action,
+            date: check.date,
+            urgency,
+          });
+        }
       }
     }
   }
