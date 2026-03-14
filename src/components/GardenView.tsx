@@ -6,6 +6,7 @@ interface GardenViewProps {
   selectedPlantId: string | null;
   onTileClick: (bedId: string, tileX: number, tileY: number) => void;
   onTileRightClick: (bedId: string, tileX: number, tileY: number) => void;
+  onPlantTap: (bedId: string, tileX: number, tileY: number) => void;
 }
 
 export function GardenView({
@@ -13,6 +14,7 @@ export function GardenView({
   selectedPlantId,
   onTileClick,
   onTileRightClick,
+  onPlantTap,
 }: GardenViewProps) {
   const totalPlantings = garden.plantings.length;
   const totalTiles = garden.beds.reduce((sum, b) => sum + b.widthFt * b.heightFt, 0);
@@ -41,6 +43,8 @@ export function GardenView({
                 selectedPlantId={selectedPlantId}
                 onTileClick={onTileClick}
                 onTileRightClick={onTileRightClick}
+                zone={garden.zone}
+                onPlantTap={onPlantTap}
               />
             ))}
         </div>
@@ -57,6 +61,8 @@ export function GardenView({
                 selectedPlantId={selectedPlantId}
                 onTileClick={onTileClick}
                 onTileRightClick={onTileRightClick}
+                zone={garden.zone}
+                onPlantTap={onPlantTap}
               />
             ))}
         </div>
@@ -73,6 +79,8 @@ export function GardenView({
                 selectedPlantId={selectedPlantId}
                 onTileClick={onTileClick}
                 onTileRightClick={onTileRightClick}
+                zone={garden.zone}
+                onPlantTap={onPlantTap}
               />
             ))}
         </div>
@@ -89,6 +97,8 @@ export function GardenView({
                 selectedPlantId={selectedPlantId}
                 onTileClick={onTileClick}
                 onTileRightClick={onTileRightClick}
+                zone={garden.zone}
+                onPlantTap={onPlantTap}
               />
             ))}
         </div>
@@ -104,6 +114,8 @@ export function GardenView({
               selectedPlantId={selectedPlantId}
               onTileClick={onTileClick}
               onTileRightClick={onTileRightClick}
+                zone={garden.zone}
+                onPlantTap={onPlantTap}
             />
           ))}
       </div>

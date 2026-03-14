@@ -1,13 +1,15 @@
 import type { BedConfig, PlacedPlant, SunRequirement } from "../types";
 import { plantsById } from "../data/plants";
-import { getTileCompanionStatus } from "../engine/planting-rules";
+import { getTileCompanionStatus, checkZoneCompatibility } from "../engine/planting-rules";
 
 interface BedGridProps {
   bed: BedConfig;
   plantings: PlacedPlant[];
   selectedPlantId: string | null;
+  zone?: string;
   onTileClick: (bedId: string, tileX: number, tileY: number) => void;
   onTileRightClick: (bedId: string, tileX: number, tileY: number) => void;
+  onPlantTap: (bedId: string, tileX: number, tileY: number) => void;
 }
 
 const sunIcons: Record<SunRequirement, string> = {
@@ -20,8 +22,10 @@ export function BedGrid({
   bed,
   plantings,
   selectedPlantId,
+  zone = "6a",
   onTileClick,
   onTileRightClick,
+  onPlantTap,
 }: BedGridProps) {
   const bedPlantings = plantings.filter((p) => p.bedId === bed.id);
   const isRaised = bed.type === "raised";
@@ -45,6 +49,9 @@ export function BedGrid({
         plant &&
         ((plant.sunRequirement === "full" && bedSun === "shade") ||
          (plant.sunRequirement === "full" && bedSun === "partial"));
+
+      // Zone warning for placed plant
+      const zoneStatus = placed ? checkZoneCompatibility(placed.plantId, zone) : "ok";
 
       // Check companion status for placed plants
       let companionClass = "";
@@ -92,12 +99,18 @@ export function BedGrid({
           }}
           title={
             plant
-              ? `${plant.name}${placedSunWarn ? " ⚠ Needs more sun!" : ""} - Right click to remove`
+              ? `${plant.name}${placedSunWarn ? " ⚠ Needs more sun!" : ""}${zoneStatus !== "ok" ? ` ⚠ ${zoneStatus} for zone ${zone}` : ""} — Tap to inspect`
               : selectedPlantId
               ? `Place ${plantsById[selectedPlantId]?.name}${sunMismatch ? " (sun warning)" : ""}`
               : "Select a plant first"
           }
-          onClick={() => onTileClick(bed.id, x, y)}
+          onClick={() => {
+            if (plant && !selectedPlantId) {
+              onPlantTap(bed.id, x, y);
+            } else {
+              onTileClick(bed.id, x, y);
+            }
+          }}
           onContextMenu={(e) => {
             e.preventDefault();
             onTileRightClick(bed.id, x, y);
@@ -110,6 +123,11 @@ export function BedGrid({
           )}
           {placedSunWarn && (
             <span className="absolute -top-0.5 -right-0.5 text-[8px]">⚠️</span>
+          )}
+          {!placedSunWarn && zoneStatus !== "ok" && (
+            <span className="absolute -top-0.5 -right-0.5 text-[8px]">
+              {zoneStatus === "incompatible" ? "❌" : "⚠️"}
+            </span>
           )}
         </button>
       );

@@ -74,6 +74,69 @@ export function getTileCompanionStatus(
   return "neutral";
 }
 
+export interface CompanionDetail {
+  neighborId: string;
+  neighborName: string;
+  status: "good" | "bad";
+}
+
+export function getCompanionDetails(
+  plantId: string,
+  bedId: string,
+  tileX: number,
+  tileY: number,
+  plantings: PlacedPlant[]
+): CompanionDetail[] {
+  const neighbors = getNeighborPlantIds(bedId, tileX, tileY, plantings);
+  const details: CompanionDetail[] = [];
+  const seen = new Set<string>();
+
+  for (const neighborId of neighbors) {
+    if (seen.has(neighborId)) continue;
+    seen.add(neighborId);
+    const status = checkCompanion(plantId, neighborId);
+    if (status !== "neutral") {
+      const neighbor = plantsById[neighborId];
+      details.push({
+        neighborId,
+        neighborName: neighbor?.name || neighborId,
+        status,
+      });
+    }
+  }
+
+  return details;
+}
+
+/**
+ * Parse zone string like "6a" or "6b" into a number (6).
+ */
+export function parseZoneNumber(zone: string): number {
+  return parseInt(zone.replace(/[ab]/i, ""), 10);
+}
+
+/**
+ * Check if a plant is compatible with the given zone.
+ * Returns "ok", "marginal" (within 1 zone of boundary), or "incompatible".
+ */
+export function checkZoneCompatibility(
+  plantId: string,
+  zone: string
+): "ok" | "marginal" | "incompatible" {
+  const plant = plantsById[plantId];
+  if (!plant) return "ok";
+  const zoneNum = parseZoneNumber(zone);
+  if (isNaN(zoneNum)) return "ok";
+
+  const [min, max] = plant.hardinessZones;
+  if (zoneNum >= min && zoneNum <= max) {
+    // Check if at the edge
+    if (zoneNum === min || zoneNum === max) return "marginal";
+    return "ok";
+  }
+  return "incompatible";
+}
+
 /**
  * Returns the minimum tile radius a plant needs around itself.
  * spacingInches / 12 gives feet, rounded up. A plant that needs 1 tile

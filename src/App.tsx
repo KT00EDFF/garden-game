@@ -6,6 +6,7 @@ import { PlantPalette } from "./components/PlantPalette";
 import { SeasonTimeline } from "./components/SeasonTimeline";
 import { Alerts } from "./components/Alerts";
 import { Settings } from "./components/Settings";
+import { PlantCard } from "./components/PlantCard";
 
 function App() {
   const {
@@ -25,6 +26,24 @@ function App() {
   } = useGarden();
 
   const [showSettings, setShowSettings] = useState(false);
+  const [inspectedTile, setInspectedTile] = useState<{
+    bedId: string;
+    tileX: number;
+    tileY: number;
+  } | null>(null);
+
+  const inspectedPlanting = inspectedTile
+    ? garden.plantings.find(
+        (p) =>
+          p.bedId === inspectedTile.bedId &&
+          p.tileX === inspectedTile.tileX &&
+          p.tileY === inspectedTile.tileY
+      )
+    : undefined;
+
+  const inspectedBed = inspectedTile
+    ? garden.beds.find((b) => b.id === inspectedTile.bedId)
+    : undefined;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -63,6 +82,9 @@ function App() {
               selectedPlantId={selectedPlantId}
               onTileClick={placePlant}
               onTileRightClick={removePlant}
+              onPlantTap={(bedId, tileX, tileY) =>
+                setInspectedTile({ bedId, tileX, tileY })
+              }
             />
 
             {/* Timeline below garden */}
@@ -82,7 +104,7 @@ function App() {
 
       <footer className="bg-panel border-t border-text-secondary/20 p-2 text-center">
         <p className="text-[6px] text-text-secondary">
-          Tap a plant, then tap a tile to place it. Right-click to remove. Auto-saves.
+          Tap a plant, then tap a tile to place it. Tap a placed plant to inspect. Right-click to remove. Auto-saves.
         </p>
       </footer>
 
@@ -91,6 +113,24 @@ function App() {
           garden={garden}
           onUpdate={updateGarden}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {inspectedPlanting && inspectedBed && (
+        <PlantCard
+          placed={inspectedPlanting}
+          plantings={garden.plantings}
+          bedSun={inspectedBed.sunExposure || "full"}
+          zone={garden.zone}
+          onRemove={() => {
+            removePlant(
+              inspectedPlanting.bedId,
+              inspectedPlanting.tileX,
+              inspectedPlanting.tileY
+            );
+            setInspectedTile(null);
+          }}
+          onClose={() => setInspectedTile(null)}
         />
       )}
     </div>

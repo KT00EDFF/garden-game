@@ -107,12 +107,12 @@ garden-game/
 ### Phase 3: Smart Feedback (Companion Planting + Validation)
 **Goal**: The garden gives you real-time advice as you plan
 
-- [ ] Create `companions.json` with relationship rules
-- [ ] When placing a plant, check adjacent tiles for enemies → red glow
-- [ ] Check adjacent tiles for companions → green glow
-- [ ] `PlantCard` popup on tap: shows full detail + why it's conflicting
-- [ ] Zone warnings: flag plants that are marginal for 6a
-- [ ] Sun requirement hints per bed (user marks beds as full/partial/shade in settings)
+- [x] Companion/enemy relationships defined in plant data
+- [x] When placing a plant, check adjacent tiles for enemies → red glow
+- [x] Check adjacent tiles for companions → green glow
+- [x] `PlantCard` popup on tap: shows full detail + why it's conflicting
+- [x] Zone warnings: flag plants that are marginal for 6a
+- [x] Sun requirement hints per bed (user marks beds as full/partial/shade in settings)
 
 ### Phase 4: Season Timeline
 **Goal**: See your whole season at a glance, know what to do when
