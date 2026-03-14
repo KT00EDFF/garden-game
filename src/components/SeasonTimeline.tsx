@@ -1,6 +1,6 @@
 import type { GardenState } from "../types";
 import { plantsById } from "../data/plants";
-import { calculateSchedule, calculateSuccessionSchedules, formatDate } from "../engine/schedule";
+import { calculateSchedule, calculateFallSchedule, calculateSuccessionSchedules, formatDate } from "../engine/schedule";
 
 interface SeasonTimelineProps {
   garden: GardenState;
@@ -23,10 +23,10 @@ export function SeasonTimeline({ garden }: SeasonTimelineProps) {
     );
   }
 
-  // Timeline spans Jan 1 to Nov 30
+  // Timeline spans Jan 1 to Dec 31
   const year = new Date().getFullYear();
   const timelineStart = new Date(year, 0, 1);
-  const timelineEnd = new Date(year, 10, 30);
+  const timelineEnd = new Date(year, 11, 31);
   const totalDays = (timelineEnd.getTime() - timelineStart.getTime()) / (1000 * 60 * 60 * 24);
 
   const lastFrost = new Date(garden.lastFrostDate);
@@ -38,7 +38,7 @@ export function SeasonTimeline({ garden }: SeasonTimelineProps) {
   }
 
   // Month markers
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   return (
     <div className="p-3 bg-panel rounded-sm border border-text-secondary/20">
@@ -52,7 +52,7 @@ export function SeasonTimeline({ garden }: SeasonTimelineProps) {
           <span
             key={month}
             className="absolute text-[6px] text-text-secondary"
-            style={{ left: `${(i / 11) * 100}%` }}
+            style={{ left: `${(i / 12) * 100}%` }}
           >
             {month}
           </span>
@@ -111,15 +111,28 @@ export function SeasonTimeline({ garden }: SeasonTimelineProps) {
             (s) => s.plantId === plantId
           );
 
-          const schedules = succession
-            ? calculateSuccessionSchedules(
-                plant,
-                garden.lastFrostDate,
-                garden.firstFrostDate,
-                succession.intervalWeeks,
-                succession.count
-              )
-            : [{ schedule: calculateSchedule(plant, garden.lastFrostDate, garden.firstFrostDate), round: 0 }];
+          const hasSpring = plant.seasons.includes("spring") || plant.seasons.includes("summer");
+          const hasFall = plant.seasons.includes("fall") || plant.seasons.includes("winter");
+
+          // Spring/summer schedules (including successions)
+          const springSchedules = hasSpring
+            ? succession
+              ? calculateSuccessionSchedules(
+                  plant,
+                  garden.lastFrostDate,
+                  garden.firstFrostDate,
+                  succession.intervalWeeks,
+                  succession.count
+                )
+              : [{ schedule: calculateSchedule(plant, garden.lastFrostDate, garden.firstFrostDate), round: 0 }]
+            : [];
+
+          // Fall schedule
+          const fallSchedules = hasFall
+            ? [{ schedule: calculateFallSchedule(plant, garden.lastFrostDate, garden.firstFrostDate), round: springSchedules.length }]
+            : [];
+
+          const schedules = [...springSchedules, ...fallSchedules];
 
           const count = garden.plantings.filter((p) => p.plantId === plantId).length;
 

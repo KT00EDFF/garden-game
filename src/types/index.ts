@@ -58,6 +58,12 @@ export interface HarvestEntry {
   notes?: string;
 }
 
+export interface RotationEntry {
+  year: number;
+  bedId: string;
+  plantIds: string[];
+}
+
 export interface GardenState {
   name: string;
   zone: string;
@@ -68,4 +74,6 @@ export interface GardenState {
   plantings: PlacedPlant[];
   successions?: SuccessionPlan[];
   harvests?: HarvestEntry[];
+  rotationHistory?: RotationEntry[];
+  exportCount?: number;
 }

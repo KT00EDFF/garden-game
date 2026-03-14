@@ -188,6 +188,22 @@ export const achievements: Achievement[] = [
     xp: 20,
     check: (g) => (g.successions || []).length >= 1,
   },
+  {
+    id: "cartographer",
+    name: "Cartographer",
+    description: "Export your garden plan as an image",
+    emoji: "🗺️",
+    xp: 15,
+    check: (g) => (g.exportCount || 0) >= 1,
+  },
+  {
+    id: "rotation_rookie",
+    name: "Rotation Rookie",
+    description: "Save your first year snapshot",
+    emoji: "🔄",
+    xp: 20,
+    check: (g) => (g.rotationHistory || []).length >= 1,
+  },
 ];
 
 export function loadUnlocked(): UnlockedAchievement[] {

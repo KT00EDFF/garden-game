@@ -146,12 +146,12 @@ garden-game/
 - [x] Achievements & XP system (12 achievements, XP bar, toast notifications)
 - [x] Succession planting (multiple sow dates for same crop, configurable interval + rounds)
 - [x] Harvest log (track actual yields, grouped by plant, with quantities and notes)
-- Crop rotation memory (year-over-year tracking)
+- [x] Crop rotation memory (year-over-year tracking with plant family conflict warnings)
+- [x] Export plan as image (Canvas API render to downloadable PNG)
+- [x] Fall/winter planning (lettuce, spinach, cover crop + fall schedule engine)
 - Seed inventory tracker
 - Weather API integration (frost warnings)
 - Animated pixel art growth stages
-- Export plan as image/PDF
-- Fall/winter planning (garlic, cover crops)
 
 ---
 

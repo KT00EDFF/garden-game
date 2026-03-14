@@ -197,6 +197,30 @@ export function useGarden() {
     setSelectedPlantId(null);
   }, []);
 
+  const saveRotationSnapshot = useCallback((year: number) => {
+    setGarden((prev) => {
+      const bedPlantMap = new Map<string, Set<string>>();
+      for (const p of prev.plantings) {
+        if (!bedPlantMap.has(p.bedId)) bedPlantMap.set(p.bedId, new Set());
+        bedPlantMap.get(p.bedId)!.add(p.plantId);
+      }
+      const newEntries = Array.from(bedPlantMap.entries()).map(
+        ([bedId, plantIds]) => ({
+          year,
+          bedId,
+          plantIds: Array.from(plantIds),
+        })
+      );
+      const existing = (prev.rotationHistory || []).filter(
+        (e) => e.year !== year
+      );
+      return {
+        ...prev,
+        rotationHistory: [...existing, ...newEntries],
+      };
+    });
+  }, []);
+
   const removePlan = useCallback((planId: string) => {
     deletePlan(planId);
     const remaining = listPlans();
@@ -226,5 +250,6 @@ export function useGarden() {
     removeSuccession,
     addHarvest,
     removeHarvest,
+    saveRotationSnapshot,
   };
 }

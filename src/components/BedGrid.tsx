@@ -1,12 +1,14 @@
-import type { BedConfig, PlacedPlant, SunRequirement } from "../types";
+import type { BedConfig, PlacedPlant, RotationEntry, SunRequirement } from "../types";
 import { plantsById } from "../data/plants";
 import { getTileCompanionStatus, checkZoneCompatibility } from "../engine/planting-rules";
+import { checkRotationConflict } from "../data/plant-families";
 
 interface BedGridProps {
   bed: BedConfig;
   plantings: PlacedPlant[];
   selectedPlantId: string | null;
   zone?: string;
+  rotationHistory?: RotationEntry[];
   onTileClick: (bedId: string, tileX: number, tileY: number) => void;
   onTileRightClick: (bedId: string, tileX: number, tileY: number) => void;
   onPlantTap: (bedId: string, tileX: number, tileY: number) => void;
@@ -23,6 +25,7 @@ export function BedGrid({
   plantings,
   selectedPlantId,
   zone = "6a",
+  rotationHistory = [],
   onTileClick,
   onTileRightClick,
   onPlantTap,
@@ -52,6 +55,10 @@ export function BedGrid({
 
       // Zone warning for placed plant
       const zoneStatus = placed ? checkZoneCompatibility(placed.plantId, zone) : "ok";
+
+      const rotationResult = placed
+        ? checkRotationConflict(bed.id, placed.plantId, rotationHistory)
+        : { hasConflict: false };
 
       // Check companion status for placed plants
       let companionClass = "";
@@ -127,6 +134,14 @@ export function BedGrid({
           {!placedSunWarn && zoneStatus !== "ok" && (
             <span className="absolute -top-0.5 -right-0.5 text-[8px]">
               {zoneStatus === "incompatible" ? "❌" : "⚠️"}
+            </span>
+          )}
+          {rotationResult.hasConflict && (
+            <span
+              className="absolute -bottom-0.5 -left-0.5 text-[8px]"
+              title={`Same family (${rotationResult.family}) was here in ${rotationResult.lastYear}`}
+            >
+              🔄
             </span>
           )}
         </button>

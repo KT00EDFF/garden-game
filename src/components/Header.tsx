@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { GardenState } from "../types";
 import type { PlanMeta } from "../data/garden-config";
+import { ExportButton } from "./ExportButton";
 
 interface HeaderProps {
   garden: GardenState;
@@ -8,6 +9,7 @@ interface HeaderProps {
   onOpenSettings: () => void;
   onOpenAchievements: () => void;
   onOpenHarvestLog: () => void;
+  onOpenRotation: () => void;
   totalXP: number;
   harvestCount: number;
   plans: PlanMeta[];
@@ -15,6 +17,7 @@ interface HeaderProps {
   onSwitchPlan: (planId: string) => void;
   onAddPlan: (name: string) => void;
   onDeletePlan: (planId: string) => void;
+  onExport: () => void;
 }
 
 export function Header({
@@ -23,6 +26,7 @@ export function Header({
   onOpenSettings,
   onOpenAchievements,
   onOpenHarvestLog,
+  onOpenRotation,
   totalXP,
   harvestCount,
   plans,
@@ -30,6 +34,7 @@ export function Header({
   onSwitchPlan,
   onAddPlan,
   onDeletePlan,
+  onExport,
 }: HeaderProps) {
   const [showPlanMenu, setShowPlanMenu] = useState(false);
   const now = new Date();
@@ -141,6 +146,13 @@ export function Header({
           >
             Harvest{harvestCount > 0 ? ` (${harvestCount})` : ""}
           </button>
+          <button
+            onClick={onOpenRotation}
+            className="text-[7px] text-text-primary bg-panel-light border border-text-secondary/30 px-2 py-1 rounded-sm hover:bg-accent/20 hover:border-accent/40 transition-colors"
+          >
+            Rotation
+          </button>
+          <ExportButton garden={garden} onExported={onExport} />
           <button
             onClick={onOpenSettings}
             className="text-[7px] text-text-secondary border border-text-secondary/30 px-2 py-1 rounded-sm hover:bg-panel-light hover:text-text-primary transition-colors"

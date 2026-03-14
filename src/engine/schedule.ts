@@ -71,6 +71,64 @@ export function calculateSchedule(
   };
 }
 
+/** Frost-tolerant plants that can handle light frost and harvest a few weeks past first frost. */
+const FROST_TOLERANT_IDS = ["lettuce", "spinach", "kale"];
+
+/**
+ * Calculate a fall planting schedule relative to the FIRST frost date.
+ * Plants with "fall" in their seasons count backwards from first frost for sow dates,
+ * and frost-tolerant crops get an extended harvest window past first frost.
+ */
+export function calculateFallSchedule(
+  plant: Plant,
+  lastFrostDate: string,
+  firstFrostDate: string
+): PlantSchedule {
+  const firstFrost = new Date(firstFrostDate);
+
+  let startIndoors: Date | null = null;
+  let sowOutdoors: Date | null = null;
+  let transplant: Date | null = null;
+  let harvestStart: Date | null = null;
+
+  // For fall crops, sow/transplant dates count back from first frost
+  if (plant.startIndoorsWeeksBefore && plant.sowType === "transplant") {
+    // Transplant early enough to mature before frost
+    // Count back: daysToMaturity + a couple weeks for transplant establishment
+    const weeksBeforeFrost = Math.ceil(plant.daysToMaturity / 7) + 2;
+    transplant = addWeeks(firstFrost, -weeksBeforeFrost);
+    startIndoors = addWeeks(transplant, -plant.startIndoorsWeeksBefore);
+  } else if (plant.directSowWeeksBeforeFrost && plant.directSowWeeksBeforeFrost > 0) {
+    // Direct sow N weeks before first frost
+    sowOutdoors = addWeeks(firstFrost, -plant.directSowWeeksBeforeFrost);
+  } else {
+    // Fallback: sow based on days to maturity before first frost
+    sowOutdoors = addDays(firstFrost, -plant.daysToMaturity - 14);
+  }
+
+  // Harvest date: count from transplant/sow date
+  const countFrom = transplant || sowOutdoors;
+  if (countFrom) {
+    harvestStart = addDays(countFrom, plant.daysToMaturity);
+  }
+
+  // Harvest window: frost-tolerant crops get 2-3 weeks past first frost
+  const frostTolerant = FROST_TOLERANT_IDS.includes(plant.id);
+  const harvestEnd = harvestStart
+    ? frostTolerant
+      ? addDays(firstFrost, 21) // 3 weeks past first frost
+      : new Date(Math.min(addDays(harvestStart, 21).getTime(), firstFrost.getTime()))
+    : null;
+
+  return {
+    startIndoors,
+    sowOutdoors,
+    transplant,
+    harvestStart,
+    harvestEnd,
+  };
+}
+
 export function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }

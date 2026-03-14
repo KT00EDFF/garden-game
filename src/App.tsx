@@ -11,6 +11,7 @@ import { Onboarding } from "./components/Onboarding";
 import { Achievements } from "./components/Achievements";
 import { AchievementToast } from "./components/AchievementToast";
 import { HarvestLog } from "./components/HarvestLog";
+import { CropRotation } from "./components/CropRotation";
 import {
   evaluateAchievements,
   loadUnlocked,
@@ -41,11 +42,13 @@ function App() {
     removeSuccession,
     addHarvest,
     removeHarvest,
+    saveRotationSnapshot,
   } = useGarden();
 
   const [showSettings, setShowSettings] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showHarvestLog, setShowHarvestLog] = useState(false);
+  const [showRotation, setShowRotation] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(
     () => !localStorage.getItem(ONBOARDING_KEY)
   );
@@ -61,7 +64,7 @@ function App() {
       setToastQueue((prev) => [...prev, ...newlyUnlocked]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [garden.plantings]);
+  }, [garden.plantings, garden.exportCount, garden.rotationHistory]);
 
   const dismissToast = useCallback(() => {
     setToastQueue((prev) => prev.slice(1));
@@ -93,6 +96,7 @@ function App() {
         onOpenSettings={() => setShowSettings(true)}
         onOpenAchievements={() => setShowAchievements(true)}
         onOpenHarvestLog={() => setShowHarvestLog(true)}
+        onOpenRotation={() => setShowRotation(true)}
         totalXP={getTotalXP(unlockedAchievements)}
         harvestCount={(garden.harvests || []).length}
         plans={plans}
@@ -100,6 +104,9 @@ function App() {
         onSwitchPlan={switchPlan}
         onAddPlan={addPlan}
         onDeletePlan={removePlan}
+        onExport={() =>
+          updateGarden({ exportCount: (garden.exportCount || 0) + 1 })
+        }
       />
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-3">
@@ -181,6 +188,14 @@ function App() {
           onAddHarvest={addHarvest}
           onRemoveHarvest={removeHarvest}
           onClose={() => setShowHarvestLog(false)}
+        />
+      )}
+
+      {showRotation && (
+        <CropRotation
+          garden={garden}
+          onSaveSnapshot={saveRotationSnapshot}
+          onClose={() => setShowRotation(false)}
         />
       )}
 
