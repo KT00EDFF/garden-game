@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useGarden } from "./hooks/useGarden";
 import { Header } from "./components/Header";
 import { GardenView } from "./components/GardenView";
 import { PlantPalette } from "./components/PlantPalette";
 import { SeasonTimeline } from "./components/SeasonTimeline";
 import { Alerts } from "./components/Alerts";
+import { Settings } from "./components/Settings";
 
 function App() {
   const {
@@ -13,11 +15,29 @@ function App() {
     placePlant,
     removePlant,
     clearAll,
+    updateGarden,
+    spacingWarning,
+    plans,
+    activePlanId,
+    switchPlan,
+    addPlan,
+    removePlan,
   } = useGarden();
+
+  const [showSettings, setShowSettings] = useState(false);
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header garden={garden} onClearAll={clearAll} />
+      <Header
+        garden={garden}
+        onClearAll={clearAll}
+        onOpenSettings={() => setShowSettings(true)}
+        plans={plans}
+        activePlanId={activePlanId}
+        onSwitchPlan={switchPlan}
+        onAddPlan={addPlan}
+        onDeletePlan={removePlan}
+      />
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-3">
         <div className="flex flex-col lg:flex-row gap-4">
@@ -33,6 +53,11 @@ function App() {
 
           {/* Center: Garden Grid */}
           <section className="flex-1 order-1 lg:order-2">
+            {spacingWarning && (
+              <div className="mb-2 p-2 bg-danger/10 border border-danger/30 rounded-sm text-[8px] text-danger">
+                ⚠ {spacingWarning}
+              </div>
+            )}
             <GardenView
               garden={garden}
               selectedPlantId={selectedPlantId}
@@ -60,6 +85,14 @@ function App() {
           Tap a plant, then tap a tile to place it. Right-click to remove. Auto-saves.
         </p>
       </footer>
+
+      {showSettings && (
+        <Settings
+          garden={garden}
+          onUpdate={updateGarden}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   );
 }

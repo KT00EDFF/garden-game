@@ -1,4 +1,4 @@
-import type { BedConfig, PlacedPlant } from "../types";
+import type { BedConfig, PlacedPlant, SunRequirement } from "../types";
 import { plantsById } from "../data/plants";
 import { getTileCompanionStatus } from "../engine/planting-rules";
 
@@ -10,6 +10,12 @@ interface BedGridProps {
   onTileRightClick: (bedId: string, tileX: number, tileY: number) => void;
 }
 
+const sunIcons: Record<SunRequirement, string> = {
+  full: "☀️",
+  partial: "⛅",
+  shade: "🌥️",
+};
+
 export function BedGrid({
   bed,
   plantings,
@@ -19,12 +25,26 @@ export function BedGrid({
 }: BedGridProps) {
   const bedPlantings = plantings.filter((p) => p.bedId === bed.id);
   const isRaised = bed.type === "raised";
+  const bedSun = bed.sunExposure || "full";
+
+  // Check if selected plant has a sun mismatch with this bed
+  const selectedPlant = selectedPlantId ? plantsById[selectedPlantId] : null;
+  const sunMismatch =
+    selectedPlant &&
+    ((selectedPlant.sunRequirement === "full" && bedSun === "shade") ||
+     (selectedPlant.sunRequirement === "full" && bedSun === "partial"));
 
   const tiles: React.ReactNode[] = [];
   for (let y = 0; y < bed.heightFt; y++) {
     for (let x = 0; x < bed.widthFt; x++) {
       const placed = bedPlantings.find((p) => p.tileX === x && p.tileY === y);
       const plant = placed ? plantsById[placed.plantId] : null;
+
+      // Sun warning for placed plant
+      const placedSunWarn =
+        plant &&
+        ((plant.sunRequirement === "full" && bedSun === "shade") ||
+         (plant.sunRequirement === "full" && bedSun === "partial"));
 
       // Check companion status for placed plants
       let companionClass = "";
@@ -58,7 +78,7 @@ export function BedGrid({
         <button
           key={`${x}-${y}`}
           className={`
-            aspect-square flex items-center justify-center text-lg
+            aspect-square flex items-center justify-center text-lg relative
             transition-all duration-100
             ${plant
               ? `${companionClass}`
@@ -70,7 +90,13 @@ export function BedGrid({
             backgroundColor: plant ? plant.color : isRaised ? "#8B6914" : "#6B5B3A",
             imageRendering: "pixelated",
           }}
-          title={plant ? `${plant.name} - Right click to remove` : selectedPlantId ? `Place ${plantsById[selectedPlantId]?.name}` : "Select a plant first"}
+          title={
+            plant
+              ? `${plant.name}${placedSunWarn ? " ⚠ Needs more sun!" : ""} - Right click to remove`
+              : selectedPlantId
+              ? `Place ${plantsById[selectedPlantId]?.name}${sunMismatch ? " (sun warning)" : ""}`
+              : "Select a plant first"
+          }
           onClick={() => onTileClick(bed.id, x, y)}
           onContextMenu={(e) => {
             e.preventDefault();
@@ -81,6 +107,9 @@ export function BedGrid({
             <span className="drop-shadow-md" style={{ fontSize: bed.widthFt > 10 ? "14px" : "18px" }}>
               {plant.emoji}
             </span>
+          )}
+          {placedSunWarn && (
+            <span className="absolute -top-0.5 -right-0.5 text-[8px]">⚠️</span>
           )}
         </button>
       );
@@ -93,11 +122,17 @@ export function BedGrid({
         <span className="text-[8px] text-text-secondary uppercase tracking-wider">
           {bed.name}
         </span>
-        <span className="text-[7px] text-text-secondary">
+        <span className="text-[7px] text-text-secondary flex items-center gap-1">
+          <span>{sunIcons[bedSun]}</span>
           {bed.widthFt}x{bed.heightFt}ft
           {bed.type === "in-ground" ? " (ground)" : ""}
         </span>
       </div>
+      {sunMismatch && (
+        <div className="text-[6px] text-accent px-1">
+          ⚠ {selectedPlant?.name} wants full sun — this bed is {bedSun}
+        </div>
+      )}
       <div
         className={`
           grid gap-[2px] p-1

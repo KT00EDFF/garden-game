@@ -33,6 +33,7 @@ export interface BedConfig {
   heightFt: number;
   posX: number; // position in garden layout grid
   posY: number;
+  sunExposure?: SunRequirement;
 }
 
 export interface PlacedPlant {

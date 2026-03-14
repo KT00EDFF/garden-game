@@ -73,3 +73,48 @@ export function getTileCompanionStatus(
   if (hasGood) return "good";
   return "neutral";
 }
+
+/**
+ * Returns the minimum tile radius a plant needs around itself.
+ * spacingInches / 12 gives feet, rounded up. A plant that needs 1 tile
+ * has radius 0 (fits in one tile). 24" = 2ft = radius 1, 36" = 3ft = radius 2.
+ */
+export function getSpacingRadius(plantId: string): number {
+  const plant = plantsById[plantId];
+  if (!plant) return 0;
+  const tiles = Math.ceil(plant.spacingInches / 12);
+  return Math.max(0, tiles - 1);
+}
+
+/**
+ * Check if placing a plant at (tileX, tileY) would violate spacing rules
+ * of any nearby plant, or if the placed plant itself needs space that's
+ * already occupied by a different plant type.
+ * Returns the name of the conflicting plant, or null if OK.
+ */
+export function checkSpacingConflict(
+  plantId: string,
+  bedId: string,
+  tileX: number,
+  tileY: number,
+  plantings: PlacedPlant[]
+): string | null {
+  const myRadius = getSpacingRadius(plantId);
+  const bedPlantings = plantings.filter((p) => p.bedId === bedId);
+
+  for (const placed of bedPlantings) {
+    // Same plant type stacking is fine (e.g. filling a melon area)
+    if (placed.plantId === plantId) continue;
+
+    const dist = Math.max(Math.abs(placed.tileX - tileX), Math.abs(placed.tileY - tileY));
+    const theirRadius = getSpacingRadius(placed.plantId);
+
+    // Conflict if within either plant's spacing radius
+    const requiredDist = Math.max(myRadius, theirRadius);
+    if (dist <= requiredDist) {
+      return plantsById[placed.plantId]?.name || placed.plantId;
+    }
+  }
+
+  return null;
+}
