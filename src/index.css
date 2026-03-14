@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-pixel: "Press Start 2P", monospace;
+  --color-soil: #8B6914;
+  --color-soil-dark: #6B4F10;
+  --color-bed-wood: #A0522D;
+  --color-bed-wood-dark: #7B3F1E;
+  --color-ground: #5C8A2F;
+  --color-ground-dark: #4A7025;
+  --color-bg: #2D5016;
+  --color-bg-dark: #1E3A0E;
+  --color-panel: #1a1a2e;
+  --color-panel-light: #25253e;
+  --color-text-primary: #f0e6d3;
+  --color-text-secondary: #a89880;
+  --color-accent: #FFD700;
+  --color-danger: #FF6B6B;
+  --color-success: #6BCB77;
+  --color-water: #4A90D9;
+}
+
+* {
+  box-sizing: border-box;
+  image-rendering: pixelated;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg-dark);
+  color: var(--color-text-primary);
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-panel);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-bed-wood);
+  border-radius: 4px;
+}
