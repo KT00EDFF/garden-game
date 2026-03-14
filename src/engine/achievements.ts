@@ -1,6 +1,7 @@
 import type { GardenState } from "../types";
 import { plantsById } from "../data/plants";
 import { getTileCompanionStatus } from "./planting-rules";
+import { getGrowthStage } from "./growth-stage";
 
 export interface Achievement {
   id: string;
@@ -203,6 +204,35 @@ export const achievements: Achievement[] = [
     emoji: "🔄",
     xp: 20,
     check: (g) => (g.rotationHistory || []).length >= 1,
+  },
+  {
+    id: "patient_gardener",
+    name: "Patient Gardener",
+    description: "Have a plant reach harvest stage",
+    emoji: "🌻",
+    xp: 30,
+    check: (g) => {
+      if (!g.lastFrostDate || !g.firstFrostDate) return false;
+      return g.plantings.some(
+        (p) => getGrowthStage(p.plantId, g.lastFrostDate, g.firstFrostDate) === "harvest"
+      );
+    },
+  },
+  {
+    id: "weather_watcher",
+    name: "Weather Watcher",
+    description: "Check the weather forecast",
+    emoji: "\uD83C\uDF24\uFE0F",
+    xp: 10,
+    check: (g) => g.weatherChecked === true,
+  },
+  {
+    id: "seed_collector",
+    name: "Seed Collector",
+    description: "Track 5 different seeds in inventory",
+    emoji: "\u{1F330}",
+    xp: 20,
+    check: (g) => (g.seedInventory || []).length >= 5,
   },
 ];
 

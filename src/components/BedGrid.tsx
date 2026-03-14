@@ -2,12 +2,16 @@ import type { BedConfig, PlacedPlant, RotationEntry, SunRequirement } from "../t
 import { plantsById } from "../data/plants";
 import { getTileCompanionStatus, checkZoneCompatibility } from "../engine/planting-rules";
 import { checkRotationConflict } from "../data/plant-families";
+import { getGrowthStage } from "../engine/growth-stage";
+import { getStageVisuals } from "../data/growth-sprites";
 
 interface BedGridProps {
   bed: BedConfig;
   plantings: PlacedPlant[];
   selectedPlantId: string | null;
   zone?: string;
+  lastFrostDate?: string;
+  firstFrostDate?: string;
   rotationHistory?: RotationEntry[];
   onTileClick: (bedId: string, tileX: number, tileY: number) => void;
   onTileRightClick: (bedId: string, tileX: number, tileY: number) => void;
@@ -25,6 +29,8 @@ export function BedGrid({
   plantings,
   selectedPlantId,
   zone = "6a",
+  lastFrostDate,
+  firstFrostDate,
   rotationHistory = [],
   onTileClick,
   onTileRightClick,
@@ -46,6 +52,19 @@ export function BedGrid({
     for (let x = 0; x < bed.widthFt; x++) {
       const placed = bedPlantings.find((p) => p.tileX === x && p.tileY === y);
       const plant = placed ? plantsById[placed.plantId] : null;
+
+      // Growth stage visuals
+      const stage = plant && lastFrostDate && firstFrostDate
+        ? getGrowthStage(placed!.plantId, lastFrostDate, firstFrostDate)
+        : null;
+      const stageVisuals = stage && plant
+        ? getStageVisuals(stage, plant.emoji)
+        : null;
+      const growthAnimClass = stage === "sprout" || stage === "growing"
+        ? "animate-growth"
+        : stage === "harvest"
+        ? "animate-harvest"
+        : "";
 
       // Sun warning for placed plant
       const placedSunWarn =
@@ -103,6 +122,7 @@ export function BedGrid({
           style={{
             backgroundColor: plant ? plant.color : isRaised ? "#8B6914" : "#6B5B3A",
             imageRendering: "pixelated",
+            ...(stageVisuals ? { opacity: stageVisuals.opacity } : {}),
           }}
           title={
             plant
@@ -123,7 +143,25 @@ export function BedGrid({
             onTileRightClick(bed.id, x, y);
           }}
         >
-          {plant && (
+          {plant && stageVisuals && (
+            <>
+              <span
+                className={`drop-shadow-md ${growthAnimClass}`}
+                style={{
+                  fontSize: bed.widthFt > 10 ? "14px" : "18px",
+                  transform: `scale(${stageVisuals.scale})`,
+                  display: "inline-block",
+                }}
+              >
+                {stageVisuals.emoji}
+              </span>
+              <span
+                className="absolute inset-0 pointer-events-none"
+                style={{ backgroundColor: stageVisuals.bgTint }}
+              />
+            </>
+          )}
+          {plant && !stageVisuals && (
             <span className="drop-shadow-md" style={{ fontSize: bed.widthFt > 10 ? "14px" : "18px" }}>
               {plant.emoji}
             </span>

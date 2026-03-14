@@ -67,3 +67,18 @@ body {
   outline: none;
   border-color: var(--color-accent);
 }
+
+@keyframes gentle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1px); }
+}
+.animate-growth {
+  animation: gentle-bob 3s ease-in-out infinite;
+}
+@keyframes harvest-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
+}
+.animate-harvest {
+  animation: harvest-glow 2s ease-in-out infinite;
+}

@@ -4,6 +4,7 @@ import { calculateSchedule, calculateSuccessionSchedules, formatDate } from "../
 
 interface AlertsProps {
   garden: GardenState;
+  frostWarning?: boolean;
 }
 
 interface Action {
@@ -14,7 +15,7 @@ interface Action {
   urgency: "now" | "soon" | "upcoming";
 }
 
-export function Alerts({ garden }: AlertsProps) {
+export function Alerts({ garden, frostWarning }: AlertsProps) {
   const plantedIds = [...new Set(garden.plantings.map((p) => p.plantId))];
   const now = new Date();
   const twoWeeks = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
@@ -86,6 +87,25 @@ export function Alerts({ garden }: AlertsProps) {
     }
     return a.date.getTime() - b.date.getTime();
   });
+
+  // Frost warning for frost-sensitive plants
+  const frostSensitiveIds = ["cherry_tomato", "hot_pepper", "melon", "sweet_potato"];
+  const frostPlants = frostWarning
+    ? [...new Set(garden.plantings.map((p) => p.plantId))]
+        .filter((id) => frostSensitiveIds.includes(id))
+        .map((id) => plantsById[id]?.name)
+        .filter(Boolean)
+    : [];
+
+  if (frostWarning && frostPlants.length > 0) {
+    actions.unshift({
+      emoji: "\u2744\uFE0F",
+      plantName: "Frost Alert",
+      action: `FROST WARNING — protect ${frostPlants.join(", ")}`,
+      date: new Date(),
+      urgency: "now",
+    });
+  }
 
   if (actions.length === 0) {
     return (

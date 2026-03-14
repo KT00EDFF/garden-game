@@ -149,9 +149,9 @@ garden-game/
 - [x] Crop rotation memory (year-over-year tracking with plant family conflict warnings)
 - [x] Export plan as image (Canvas API render to downloadable PNG)
 - [x] Fall/winter planning (lettuce, spinach, cover crop + fall schedule engine)
-- Seed inventory tracker
-- Weather API integration (frost warnings)
-- Animated pixel art growth stages
+- [x] Seed inventory tracker (quantities, varieties, expiration warnings)
+- [x] Weather API integration (Open-Meteo, 7-day forecast, frost warnings)
+- [x] Animated pixel art growth stages (6 stages, CSS animations, schedule-driven)
 
 ---
 

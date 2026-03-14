@@ -64,6 +64,18 @@ export interface RotationEntry {
   plantIds: string[];
 }
 
+export interface SeedInventoryItem {
+  id: string;
+  plantId: string;
+  variety?: string;
+  quantity: number;
+  unit: string;
+  source?: string;
+  purchaseDate?: string;
+  expiresYear?: number;
+  notes?: string;
+}
+
 export interface GardenState {
   name: string;
   zone: string;
@@ -75,5 +87,7 @@ export interface GardenState {
   successions?: SuccessionPlan[];
   harvests?: HarvestEntry[];
   rotationHistory?: RotationEntry[];
+  seedInventory?: SeedInventoryItem[];
   exportCount?: number;
+  weatherChecked?: boolean;
 }

@@ -44,6 +44,8 @@ export function GardenView({
                 onTileClick={onTileClick}
                 onTileRightClick={onTileRightClick}
                 zone={garden.zone}
+                lastFrostDate={garden.lastFrostDate}
+                firstFrostDate={garden.firstFrostDate}
                 rotationHistory={garden.rotationHistory}
                 onPlantTap={onPlantTap}
               />
@@ -63,6 +65,8 @@ export function GardenView({
                 onTileClick={onTileClick}
                 onTileRightClick={onTileRightClick}
                 zone={garden.zone}
+                lastFrostDate={garden.lastFrostDate}
+                firstFrostDate={garden.firstFrostDate}
                 rotationHistory={garden.rotationHistory}
                 onPlantTap={onPlantTap}
               />
@@ -82,6 +86,8 @@ export function GardenView({
                 onTileClick={onTileClick}
                 onTileRightClick={onTileRightClick}
                 zone={garden.zone}
+                lastFrostDate={garden.lastFrostDate}
+                firstFrostDate={garden.firstFrostDate}
                 rotationHistory={garden.rotationHistory}
                 onPlantTap={onPlantTap}
               />
@@ -101,6 +107,8 @@ export function GardenView({
                 onTileClick={onTileClick}
                 onTileRightClick={onTileRightClick}
                 zone={garden.zone}
+                lastFrostDate={garden.lastFrostDate}
+                firstFrostDate={garden.firstFrostDate}
                 rotationHistory={garden.rotationHistory}
                 onPlantTap={onPlantTap}
               />
@@ -119,6 +127,8 @@ export function GardenView({
               onTileClick={onTileClick}
               onTileRightClick={onTileRightClick}
                 zone={garden.zone}
+                lastFrostDate={garden.lastFrostDate}
+                firstFrostDate={garden.firstFrostDate}
                 rotationHistory={garden.rotationHistory}
                 onPlantTap={onPlantTap}
             />

@@ -1,16 +1,19 @@
 import { useState, useEffect, useCallback } from "react";
 import { useGarden } from "./hooks/useGarden";
+import { useWeather } from "./hooks/useWeather";
 import { Header } from "./components/Header";
 import { GardenView } from "./components/GardenView";
 import { PlantPalette } from "./components/PlantPalette";
 import { SeasonTimeline } from "./components/SeasonTimeline";
 import { Alerts } from "./components/Alerts";
+import { WeatherPanel } from "./components/WeatherPanel";
 import { Settings } from "./components/Settings";
 import { PlantCard } from "./components/PlantCard";
 import { Onboarding } from "./components/Onboarding";
 import { Achievements } from "./components/Achievements";
 import { AchievementToast } from "./components/AchievementToast";
 import { HarvestLog } from "./components/HarvestLog";
+import { SeedInventory } from "./components/SeedInventory";
 import { CropRotation } from "./components/CropRotation";
 import {
   evaluateAchievements,
@@ -43,12 +46,26 @@ function App() {
     addHarvest,
     removeHarvest,
     saveRotationSnapshot,
+    addSeed,
+    updateSeed,
+    removeSeed,
   } = useGarden();
+
+  const { weather, loading: weatherLoading, error: weatherError, refresh: refreshWeather } = useWeather(garden.zipCode);
+
+  // Mark weatherChecked for achievement when weather loads
+  useEffect(() => {
+    if (weather && !garden.weatherChecked) {
+      updateGarden({ weatherChecked: true });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weather]);
 
   const [showSettings, setShowSettings] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showHarvestLog, setShowHarvestLog] = useState(false);
   const [showRotation, setShowRotation] = useState(false);
+  const [showSeedInventory, setShowSeedInventory] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(
     () => !localStorage.getItem(ONBOARDING_KEY)
   );
@@ -64,7 +81,7 @@ function App() {
       setToastQueue((prev) => [...prev, ...newlyUnlocked]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [garden.plantings, garden.exportCount, garden.rotationHistory]);
+  }, [garden.plantings, garden.exportCount, garden.rotationHistory, garden.seedInventory, garden.weatherChecked]);
 
   const dismissToast = useCallback(() => {
     setToastQueue((prev) => prev.slice(1));
@@ -96,7 +113,9 @@ function App() {
         onOpenSettings={() => setShowSettings(true)}
         onOpenAchievements={() => setShowAchievements(true)}
         onOpenHarvestLog={() => setShowHarvestLog(true)}
+        onOpenSeedInventory={() => setShowSeedInventory(true)}
         onOpenRotation={() => setShowRotation(true)}
+        seedCount={(garden.seedInventory || []).length}
         totalXP={getTotalXP(unlockedAchievements)}
         harvestCount={(garden.harvests || []).length}
         plans={plans}
@@ -144,10 +163,20 @@ function App() {
             </div>
           </section>
 
-          {/* Right: Alerts */}
+          {/* Right: Weather + Alerts */}
           <aside className="lg:w-56 shrink-0 order-3">
-            <div className="lg:sticky lg:top-3">
-              <Alerts garden={garden} />
+            <div className="lg:sticky lg:top-3 flex flex-col gap-3">
+              <WeatherPanel
+                weather={weather}
+                loading={weatherLoading}
+                error={weatherError}
+                onRefresh={refreshWeather}
+                hasZipCode={!!garden.zipCode}
+              />
+              <Alerts
+                garden={garden}
+                frostWarning={!!weather && weather.daily.tempMin.some((t) => t <= 32)}
+              />
             </div>
           </aside>
         </div>
@@ -188,6 +217,16 @@ function App() {
           onAddHarvest={addHarvest}
           onRemoveHarvest={removeHarvest}
           onClose={() => setShowHarvestLog(false)}
+        />
+      )}
+
+      {showSeedInventory && (
+        <SeedInventory
+          garden={garden}
+          onAddSeed={addSeed}
+          onUpdateSeed={updateSeed}
+          onRemoveSeed={removeSeed}
+          onClose={() => setShowSeedInventory(false)}
         />
       )}
 

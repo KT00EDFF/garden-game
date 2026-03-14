@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import type { GardenState, PlacedPlant } from "../types";
+import type { GardenState, PlacedPlant, SeedInventoryItem } from "../types";
 import {
   loadGarden,
   saveGarden,
@@ -221,6 +221,38 @@ export function useGarden() {
     });
   }, []);
 
+  const addSeed = useCallback(
+    (item: Omit<SeedInventoryItem, "id">) => {
+      setGarden((prev) => ({
+        ...prev,
+        seedInventory: [
+          ...(prev.seedInventory || []),
+          { ...item, id: `seed-${Date.now()}` },
+        ],
+      }));
+    },
+    []
+  );
+
+  const updateSeed = useCallback(
+    (id: string, updates: Partial<SeedInventoryItem>) => {
+      setGarden((prev) => ({
+        ...prev,
+        seedInventory: (prev.seedInventory || []).map((s) =>
+          s.id === id ? { ...s, ...updates } : s
+        ),
+      }));
+    },
+    []
+  );
+
+  const removeSeed = useCallback((id: string) => {
+    setGarden((prev) => ({
+      ...prev,
+      seedInventory: (prev.seedInventory || []).filter((s) => s.id !== id),
+    }));
+  }, []);
+
   const removePlan = useCallback((planId: string) => {
     deletePlan(planId);
     const remaining = listPlans();
@@ -251,5 +283,8 @@ export function useGarden() {
     addHarvest,
     removeHarvest,
     saveRotationSnapshot,
+    addSeed,
+    updateSeed,
+    removeSeed,
   };
 }
