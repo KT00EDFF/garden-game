@@ -50,6 +50,14 @@ export interface SuccessionPlan {
   count: number; // number of additional sowings after the first
 }
 
+export interface HarvestEntry {
+  id: string;
+  plantId: string;
+  date: string; // ISO date
+  quantity: string; // freeform: "2 lbs", "12 tomatoes", etc.
+  notes?: string;
+}
+
 export interface GardenState {
   name: string;
   zone: string;
@@ -59,4 +67,5 @@ export interface GardenState {
   beds: BedConfig[];
   plantings: PlacedPlant[];
   successions?: SuccessionPlan[];
+  harvests?: HarvestEntry[];
 }

@@ -7,7 +7,9 @@ interface HeaderProps {
   onClearAll: () => void;
   onOpenSettings: () => void;
   onOpenAchievements: () => void;
+  onOpenHarvestLog: () => void;
   totalXP: number;
+  harvestCount: number;
   plans: PlanMeta[];
   activePlanId: string;
   onSwitchPlan: (planId: string) => void;
@@ -20,7 +22,9 @@ export function Header({
   onClearAll,
   onOpenSettings,
   onOpenAchievements,
+  onOpenHarvestLog,
   totalXP,
+  harvestCount,
   plans,
   activePlanId,
   onSwitchPlan,
@@ -130,6 +134,12 @@ export function Header({
             className="text-[7px] text-accent bg-accent/10 border border-accent/30 px-2 py-1 rounded-sm hover:bg-accent/20 transition-colors"
           >
             {totalXP} XP
+          </button>
+          <button
+            onClick={onOpenHarvestLog}
+            className="text-[7px] text-success bg-success/10 border border-success/30 px-2 py-1 rounded-sm hover:bg-success/20 transition-colors"
+          >
+            Harvest{harvestCount > 0 ? ` (${harvestCount})` : ""}
           </button>
           <button
             onClick={onOpenSettings}

@@ -10,6 +10,7 @@ import { PlantCard } from "./components/PlantCard";
 import { Onboarding } from "./components/Onboarding";
 import { Achievements } from "./components/Achievements";
 import { AchievementToast } from "./components/AchievementToast";
+import { HarvestLog } from "./components/HarvestLog";
 import {
   evaluateAchievements,
   loadUnlocked,
@@ -38,10 +39,13 @@ function App() {
     removePlan,
     setSuccession,
     removeSuccession,
+    addHarvest,
+    removeHarvest,
   } = useGarden();
 
   const [showSettings, setShowSettings] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showHarvestLog, setShowHarvestLog] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(
     () => !localStorage.getItem(ONBOARDING_KEY)
   );
@@ -88,7 +92,9 @@ function App() {
         onClearAll={clearAll}
         onOpenSettings={() => setShowSettings(true)}
         onOpenAchievements={() => setShowAchievements(true)}
+        onOpenHarvestLog={() => setShowHarvestLog(true)}
         totalXP={getTotalXP(unlockedAchievements)}
+        harvestCount={(garden.harvests || []).length}
         plans={plans}
         activePlanId={activePlanId}
         onSwitchPlan={switchPlan}
@@ -166,6 +172,15 @@ function App() {
         <Achievements
           unlocked={unlockedAchievements}
           onClose={() => setShowAchievements(false)}
+        />
+      )}
+
+      {showHarvestLog && (
+        <HarvestLog
+          garden={garden}
+          onAddHarvest={addHarvest}
+          onRemoveHarvest={removeHarvest}
+          onClose={() => setShowHarvestLog(false)}
         />
       )}
 

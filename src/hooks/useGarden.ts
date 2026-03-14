@@ -155,6 +155,32 @@ export function useGarden() {
     }));
   }, []);
 
+  const addHarvest = useCallback(
+    (plantId: string, quantity: string, notes?: string) => {
+      setGarden((prev) => ({
+        ...prev,
+        harvests: [
+          ...(prev.harvests || []),
+          {
+            id: `harvest-${Date.now()}`,
+            plantId,
+            date: new Date().toISOString().split("T")[0],
+            quantity,
+            notes,
+          },
+        ],
+      }));
+    },
+    []
+  );
+
+  const removeHarvest = useCallback((harvestId: string) => {
+    setGarden((prev) => ({
+      ...prev,
+      harvests: (prev.harvests || []).filter((h) => h.id !== harvestId),
+    }));
+  }, []);
+
   const switchPlan = useCallback((planId: string) => {
     setActivePlanId(planId);
     setActivePlan(planId);
@@ -198,5 +224,7 @@ export function useGarden() {
     removePlan,
     setSuccession,
     removeSuccession,
+    addHarvest,
+    removeHarvest,
   };
 }

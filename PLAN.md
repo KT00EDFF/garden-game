@@ -145,7 +145,7 @@ garden-game/
 ## Future Phases (V2+)
 - [x] Achievements & XP system (12 achievements, XP bar, toast notifications)
 - [x] Succession planting (multiple sow dates for same crop, configurable interval + rounds)
-- Harvest log (track actual yields)
+- [x] Harvest log (track actual yields, grouped by plant, with quantities and notes)
 - Crop rotation memory (year-over-year tracking)
 - Seed inventory tracker
 - Weather API integration (frost warnings)

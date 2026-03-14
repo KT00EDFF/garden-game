@@ -164,6 +164,30 @@ export const achievements: Achievement[] = [
       return planted.has("cherry_tomato") && planted.has("hot_pepper") && planted.has("melon");
     },
   },
+  {
+    id: "first_harvest",
+    name: "First Harvest",
+    description: "Log your first harvest",
+    emoji: "🧺",
+    xp: 15,
+    check: (g) => (g.harvests || []).length >= 1,
+  },
+  {
+    id: "bountiful",
+    name: "Bountiful",
+    description: "Log 10 harvests",
+    emoji: "🌾",
+    xp: 40,
+    check: (g) => (g.harvests || []).length >= 10,
+  },
+  {
+    id: "succession_pro",
+    name: "Succession Pro",
+    description: "Set up succession planting for any crop",
+    emoji: "🔄",
+    xp: 20,
+    check: (g) => (g.successions || []).length >= 1,
+  },
 ];
 
 export function loadUnlocked(): UnlockedAchievement[] {
