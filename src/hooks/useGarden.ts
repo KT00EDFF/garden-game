@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import type { GardenState, PlacedPlant, SeedInventoryItem } from "../types";
+import type { GardenState, PlacedPlant, SeedInventoryItem, BedType, BedConfig } from "../types";
 import {
   loadGarden,
   saveGarden,
@@ -84,6 +84,123 @@ export function useGarden() {
       });
     },
     [selectedPlantId]
+  );
+
+  const placePlantById = useCallback(
+    (plantId: string, bedId: string, tileX: number, tileY: number) => {
+      setSpacingWarning(null);
+
+      setGarden((prev) => {
+        const existing = prev.plantings.find(
+          (p) => p.bedId === bedId && p.tileX === tileX && p.tileY === tileY
+        );
+
+        if (existing) {
+          if (existing.plantId === plantId) {
+            return prev; // Same plant — no-op for palette drop
+          }
+        }
+
+        const conflict = checkSpacingConflict(
+          plantId,
+          bedId,
+          tileX,
+          tileY,
+          existing ? prev.plantings.filter((p) => p !== existing) : prev.plantings
+        );
+        if (conflict) {
+          setSpacingWarning(`Too close to ${conflict}! Needs more spacing.`);
+          return prev;
+        }
+
+        const newPlantings = existing
+          ? prev.plantings.filter((p) => p !== existing)
+          : prev.plantings;
+
+        return {
+          ...prev,
+          plantings: [
+            ...newPlantings,
+            { plantId, bedId, tileX, tileY },
+          ],
+        };
+      });
+    },
+    []
+  );
+
+  const movePlant = useCallback(
+    (
+      fromBedId: string,
+      fromX: number,
+      fromY: number,
+      toBedId: string,
+      toX: number,
+      toY: number
+    ) => {
+      setSpacingWarning(null);
+
+      setGarden((prev) => {
+        const source = prev.plantings.find(
+          (p) => p.bedId === fromBedId && p.tileX === fromX && p.tileY === fromY
+        );
+        if (!source) return prev;
+
+        const dest = prev.plantings.find(
+          (p) => p.bedId === toBedId && p.tileX === toX && p.tileY === toY
+        );
+
+        // Same tile — no-op
+        if (source === dest) return prev;
+
+        // Check spacing conflict at destination for the source plant
+        const otherPlantings = prev.plantings.filter(
+          (p) => p !== source && p !== dest
+        );
+        const conflict = checkSpacingConflict(
+          source.plantId,
+          toBedId,
+          toX,
+          toY,
+          otherPlantings
+        );
+        if (conflict) {
+          setSpacingWarning(`Too close to ${conflict}! Needs more spacing.`);
+          return prev;
+        }
+
+        // If destination has a plant, also check spacing for the swap
+        if (dest) {
+          const swapConflict = checkSpacingConflict(
+            dest.plantId,
+            fromBedId,
+            fromX,
+            fromY,
+            otherPlantings
+          );
+          if (swapConflict) {
+            setSpacingWarning(
+              `Swap blocked: ${swapConflict} too close! Needs more spacing.`
+            );
+            return prev;
+          }
+        }
+
+        // Perform the move (or swap)
+        const updated = prev.plantings.map((p) => {
+          if (p === source) {
+            return { ...p, bedId: toBedId, tileX: toX, tileY: toY };
+          }
+          if (p === dest) {
+            return { ...p, bedId: fromBedId, tileX: fromX, tileY: fromY };
+          }
+          return p;
+        });
+
+        return { ...prev, plantings: updated };
+      });
+    },
+    []
   );
 
   const removePlant = useCallback(
@@ -253,6 +370,57 @@ export function useGarden() {
     }));
   }, []);
 
+  const addBed = useCallback(
+    (name: string, type: BedType, width: number, height: number) => {
+      setGarden((prev) => ({
+        ...prev,
+        beds: [
+          ...prev.beds,
+          {
+            id: `bed-${Date.now()}`,
+            name,
+            type,
+            widthFt: width,
+            heightFt: height,
+            posX: 0,
+            posY: 0,
+            sunExposure: "full" as const,
+          },
+        ],
+      }));
+    },
+    []
+  );
+
+  const removeBed = useCallback((bedId: string) => {
+    setGarden((prev) => ({
+      ...prev,
+      beds: prev.beds.filter((b) => b.id !== bedId),
+      plantings: prev.plantings.filter((p) => p.bedId !== bedId),
+    }));
+  }, []);
+
+  const updateBed = useCallback(
+    (bedId: string, updates: Partial<BedConfig>) => {
+      setGarden((prev) => ({
+        ...prev,
+        beds: prev.beds.map((b) =>
+          b.id === bedId ? { ...b, ...updates } : b
+        ),
+      }));
+    },
+    []
+  );
+
+  const reorderBeds = useCallback((fromIndex: number, toIndex: number) => {
+    setGarden((prev) => {
+      const beds = [...prev.beds];
+      const [moved] = beds.splice(fromIndex, 1);
+      beds.splice(toIndex, 0, moved);
+      return { ...prev, beds };
+    });
+  }, []);
+
   const removePlan = useCallback((planId: string) => {
     deletePlan(planId);
     const remaining = listPlans();
@@ -267,6 +435,8 @@ export function useGarden() {
     selectedPlantId,
     setSelectedPlantId,
     placePlant,
+    placePlantById,
+    movePlant,
     removePlant,
     getPlantAt,
     clearBed,
@@ -286,5 +456,9 @@ export function useGarden() {
     addSeed,
     updateSeed,
     removeSeed,
+    addBed,
+    removeBed,
+    updateBed,
+    reorderBeds,
   };
 }

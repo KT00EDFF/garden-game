@@ -152,6 +152,9 @@ garden-game/
 - [x] Seed inventory tracker (quantities, varieties, expiration warnings)
 - [x] Weather API integration (Open-Meteo, 7-day forecast, frost warnings)
 - [x] Animated pixel art growth stages (6 stages, CSS animations, schedule-driven)
+- [x] Customizable bed editor (add/remove/resize/reorder beds, dynamic layout)
+- [x] 12 more plants (herbs: basil, cilantro, parsley, dill; veggies: bean, pea, cucumber, zucchini, corn, beet, carrot, radish)
+- [x] Drag-and-drop (move plants between tiles/beds, drag from palette, swap plants)
 
 ---
 

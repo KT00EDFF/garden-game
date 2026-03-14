@@ -11,6 +11,8 @@ interface HeaderProps {
   onOpenHarvestLog: () => void;
   onOpenSeedInventory: () => void;
   onOpenRotation: () => void;
+  onOpenBedEditor: () => void;
+  bedCount: number;
   seedCount: number;
   totalXP: number;
   harvestCount: number;
@@ -30,6 +32,8 @@ export function Header({
   onOpenHarvestLog,
   onOpenSeedInventory,
   onOpenRotation,
+  onOpenBedEditor,
+  bedCount,
   seedCount,
   totalXP,
   harvestCount,
@@ -155,6 +159,12 @@ export function Header({
             className="text-[7px] text-water bg-water/10 border border-water/30 px-2 py-1 rounded-sm hover:bg-water/20 transition-colors"
           >
             Seeds{seedCount > 0 ? ` (${seedCount})` : ""}
+          </button>
+          <button
+            onClick={onOpenBedEditor}
+            className="text-[7px] text-text-primary bg-panel-light border border-text-secondary/30 px-2 py-1 rounded-sm hover:bg-accent/20 hover:border-accent/40 transition-colors"
+          >
+            Beds ({bedCount})
           </button>
           <button
             onClick={onOpenRotation}

@@ -12,7 +12,19 @@ const familyMap: Record<string, string> = {
   garlic: "alliums",
   onion: "alliums",
   melon: "cucurbits",
+  cucumber: "cucurbits",
+  zucchini: "cucurbits",
   strawberry: "berries",
+  bush_bean: "legumes",
+  pea: "legumes",
+  basil: "herbs",
+  cilantro: "herbs",
+  parsley: "herbs",
+  dill: "herbs",
+  carrot: "roots",
+  beet: "roots",
+  radish: "roots",
+  sweet_corn: "grasses",
 };
 
 export function getPlantFamily(plantId: string): string {

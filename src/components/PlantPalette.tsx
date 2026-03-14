@@ -65,10 +65,18 @@ export function PlantPalette({ selectedPlantId, onSelect }: PlantPaletteProps) {
           return (
             <button
               key={plant.id}
+              draggable
               onClick={() => onSelect(isSelected ? null : plant.id)}
+              onDragStart={(e) => {
+                e.dataTransfer.setData(
+                  "application/json",
+                  JSON.stringify({ type: "palette", plantId: plant.id })
+                );
+                e.dataTransfer.effectAllowed = "copy";
+              }}
               className={`
                 flex flex-col items-center gap-1 p-2 rounded-sm
-                transition-all duration-100 text-center
+                transition-all duration-100 text-center cursor-grab
                 ${isSelected
                   ? "bg-accent/20 border-2 border-accent shadow-md shadow-accent/20"
                   : "bg-panel-light border-2 border-transparent hover:border-text-secondary/30"

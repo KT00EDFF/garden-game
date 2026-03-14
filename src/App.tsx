@@ -14,6 +14,7 @@ import { Achievements } from "./components/Achievements";
 import { AchievementToast } from "./components/AchievementToast";
 import { HarvestLog } from "./components/HarvestLog";
 import { SeedInventory } from "./components/SeedInventory";
+import { BedEditor } from "./components/BedEditor";
 import { CropRotation } from "./components/CropRotation";
 import {
   evaluateAchievements,
@@ -32,6 +33,8 @@ function App() {
     selectedPlantId,
     setSelectedPlantId,
     placePlant,
+    placePlantById,
+    movePlant,
     removePlant,
     clearAll,
     updateGarden,
@@ -49,6 +52,10 @@ function App() {
     addSeed,
     updateSeed,
     removeSeed,
+    addBed,
+    removeBed,
+    updateBed,
+    reorderBeds,
   } = useGarden();
 
   const { weather, loading: weatherLoading, error: weatherError, refresh: refreshWeather } = useWeather(garden.zipCode);
@@ -66,6 +73,7 @@ function App() {
   const [showHarvestLog, setShowHarvestLog] = useState(false);
   const [showRotation, setShowRotation] = useState(false);
   const [showSeedInventory, setShowSeedInventory] = useState(false);
+  const [showBedEditor, setShowBedEditor] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(
     () => !localStorage.getItem(ONBOARDING_KEY)
   );
@@ -81,7 +89,7 @@ function App() {
       setToastQueue((prev) => [...prev, ...newlyUnlocked]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [garden.plantings, garden.exportCount, garden.rotationHistory, garden.seedInventory, garden.weatherChecked]);
+  }, [garden.plantings, garden.beds, garden.exportCount, garden.rotationHistory, garden.seedInventory, garden.weatherChecked]);
 
   const dismissToast = useCallback(() => {
     setToastQueue((prev) => prev.slice(1));
@@ -115,6 +123,8 @@ function App() {
         onOpenHarvestLog={() => setShowHarvestLog(true)}
         onOpenSeedInventory={() => setShowSeedInventory(true)}
         onOpenRotation={() => setShowRotation(true)}
+        onOpenBedEditor={() => setShowBedEditor(true)}
+        bedCount={garden.beds.length}
         seedCount={(garden.seedInventory || []).length}
         totalXP={getTotalXP(unlockedAchievements)}
         harvestCount={(garden.harvests || []).length}
@@ -152,6 +162,8 @@ function App() {
               selectedPlantId={selectedPlantId}
               onTileClick={placePlant}
               onTileRightClick={removePlant}
+              onMovePlant={movePlant}
+              onPlacePlantById={placePlantById}
               onPlantTap={(bedId, tileX, tileY) =>
                 setInspectedTile({ bedId, tileX, tileY })
               }
@@ -227,6 +239,17 @@ function App() {
           onUpdateSeed={updateSeed}
           onRemoveSeed={removeSeed}
           onClose={() => setShowSeedInventory(false)}
+        />
+      )}
+
+      {showBedEditor && (
+        <BedEditor
+          garden={garden}
+          onAddBed={addBed}
+          onRemoveBed={removeBed}
+          onUpdateBed={updateBed}
+          onReorderBeds={reorderBeds}
+          onClose={() => setShowBedEditor(false)}
         />
       )}
 

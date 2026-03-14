@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import type { GardenState } from "../types";
 import { BedGrid } from "./BedGrid";
 
@@ -7,6 +8,15 @@ interface GardenViewProps {
   onTileClick: (bedId: string, tileX: number, tileY: number) => void;
   onTileRightClick: (bedId: string, tileX: number, tileY: number) => void;
   onPlantTap: (bedId: string, tileX: number, tileY: number) => void;
+  onMovePlant?: (
+    fromBedId: string,
+    fromX: number,
+    fromY: number,
+    toBedId: string,
+    toX: number,
+    toY: number
+  ) => void;
+  onPlacePlantById?: (plantId: string, bedId: string, tileX: number, tileY: number) => void;
 }
 
 export function GardenView({
@@ -15,9 +25,59 @@ export function GardenView({
   onTileClick,
   onTileRightClick,
   onPlantTap,
+  onMovePlant,
+  onPlacePlantById,
 }: GardenViewProps) {
   const totalPlantings = garden.plantings.length;
   const totalTiles = garden.beds.reduce((sum, b) => sum + b.widthFt * b.heightFt, 0);
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragSource, setDragSource] = useState<{ bedId: string; tileX: number; tileY: number } | null>(null);
+
+  const handleDragStart = useCallback((bedId: string, tileX: number, tileY: number) => {
+    setIsDragging(true);
+    setDragSource({ bedId, tileX, tileY });
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+    setDragSource(null);
+  }, []);
+
+  const handleDrop = useCallback(
+    (bedId: string, tileX: number, tileY: number) => {
+      if (dragSource && onMovePlant) {
+        onMovePlant(dragSource.bedId, dragSource.tileX, dragSource.tileY, bedId, tileX, tileY);
+      }
+      setIsDragging(false);
+      setDragSource(null);
+    },
+    [dragSource, onMovePlant]
+  );
+
+  const handleDragOver = useCallback((_bedId: string, _tileX: number, _tileY: number) => {
+    // Could add hover-state tracking here in the future
+  }, []);
+
+  const bedGridProps = (bed: typeof garden.beds[0]) => ({
+    key: bed.id,
+    bed,
+    plantings: garden.plantings,
+    selectedPlantId,
+    onTileClick,
+    onTileRightClick,
+    zone: garden.zone,
+    lastFrostDate: garden.lastFrostDate,
+    firstFrostDate: garden.firstFrostDate,
+    rotationHistory: garden.rotationHistory,
+    onPlantTap,
+    isDragging,
+    onDragStart: handleDragStart,
+    onDragEnd: handleDragEnd,
+    onDrop: handleDrop,
+    onPaletteDrop: onPlacePlantById,
+    onDragOver: handleDragOver,
+  });
 
   return (
     <div className="flex flex-col gap-3">
@@ -31,108 +91,45 @@ export function GardenView({
       </div>
 
       <div className="flex flex-col gap-4">
-        {/* Group: Raised beds row 1 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {garden.beds
-            .filter((b) => b.id === "bed-1" || b.id === "bed-2")
-            .map((bed) => (
-              <BedGrid
-                key={bed.id}
-                bed={bed}
-                plantings={garden.plantings}
-                selectedPlantId={selectedPlantId}
-                onTileClick={onTileClick}
-                onTileRightClick={onTileRightClick}
-                zone={garden.zone}
-                lastFrostDate={garden.lastFrostDate}
-                firstFrostDate={garden.firstFrostDate}
-                rotationHistory={garden.rotationHistory}
-                onPlantTap={onPlantTap}
-              />
-            ))}
-        </div>
+        {/* Small raised beds (area <= 6) */}
+        {garden.beds.filter((b) => b.type === "raised" && b.widthFt * b.heightFt <= 6).length > 0 && (
+          <div className="grid grid-cols-2 gap-3">
+            {garden.beds
+              .filter((b) => b.type === "raised" && b.widthFt * b.heightFt <= 6)
+              .map((bed) => (
+                <BedGrid {...bedGridProps(bed)} />
+              ))}
+          </div>
+        )}
 
-        {/* Group: Medium beds */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {garden.beds
-            .filter((b) => ["bed-3", "bed-6"].includes(b.id))
-            .map((bed) => (
-              <BedGrid
-                key={bed.id}
-                bed={bed}
-                plantings={garden.plantings}
-                selectedPlantId={selectedPlantId}
-                onTileClick={onTileClick}
-                onTileRightClick={onTileRightClick}
-                zone={garden.zone}
-                lastFrostDate={garden.lastFrostDate}
-                firstFrostDate={garden.firstFrostDate}
-                rotationHistory={garden.rotationHistory}
-                onPlantTap={onPlantTap}
-              />
-            ))}
-        </div>
+        {/* Medium raised beds (area 7-20) */}
+        {garden.beds.filter((b) => b.type === "raised" && b.widthFt * b.heightFt > 6 && b.widthFt * b.heightFt <= 20).length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {garden.beds
+              .filter((b) => b.type === "raised" && b.widthFt * b.heightFt > 6 && b.widthFt * b.heightFt <= 20)
+              .map((bed) => (
+                <BedGrid {...bedGridProps(bed)} />
+              ))}
+          </div>
+        )}
 
-        {/* Group: In-ground beds */}
-        <div className="flex flex-col gap-3">
-          {garden.beds
-            .filter((b) => ["bed-4", "bed-5"].includes(b.id))
-            .map((bed) => (
-              <BedGrid
-                key={bed.id}
-                bed={bed}
-                plantings={garden.plantings}
-                selectedPlantId={selectedPlantId}
-                onTileClick={onTileClick}
-                onTileRightClick={onTileRightClick}
-                zone={garden.zone}
-                lastFrostDate={garden.lastFrostDate}
-                firstFrostDate={garden.firstFrostDate}
-                rotationHistory={garden.rotationHistory}
-                onPlantTap={onPlantTap}
-              />
-            ))}
-        </div>
-
-        {/* Group: Small raised beds */}
-        <div className="grid grid-cols-2 gap-3">
-          {garden.beds
-            .filter((b) => ["bed-7", "bed-8"].includes(b.id))
-            .map((bed) => (
-              <BedGrid
-                key={bed.id}
-                bed={bed}
-                plantings={garden.plantings}
-                selectedPlantId={selectedPlantId}
-                onTileClick={onTileClick}
-                onTileRightClick={onTileRightClick}
-                zone={garden.zone}
-                lastFrostDate={garden.lastFrostDate}
-                firstFrostDate={garden.firstFrostDate}
-                rotationHistory={garden.rotationHistory}
-                onPlantTap={onPlantTap}
-              />
-            ))}
-        </div>
-
-        {/* Large in-ground bed */}
+        {/* Large raised beds (area > 20) */}
         {garden.beds
-          .filter((b) => b.id === "bed-9")
+          .filter((b) => b.type === "raised" && b.widthFt * b.heightFt > 20)
           .map((bed) => (
-            <BedGrid
-              key={bed.id}
-              bed={bed}
-              plantings={garden.plantings}
-              selectedPlantId={selectedPlantId}
-              onTileClick={onTileClick}
-              onTileRightClick={onTileRightClick}
-                zone={garden.zone}
-                lastFrostDate={garden.lastFrostDate}
-                firstFrostDate={garden.firstFrostDate}
-                rotationHistory={garden.rotationHistory}
-                onPlantTap={onPlantTap}
-            />
+            <BedGrid {...bedGridProps(bed)} />
           ))}
+
+        {/* In-ground beds stacked */}
+        {garden.beds.filter((b) => b.type === "in-ground").length > 0 && (
+          <div className="flex flex-col gap-3">
+            {garden.beds
+              .filter((b) => b.type === "in-ground")
+              .map((bed) => (
+                <BedGrid {...bedGridProps(bed)} />
+              ))}
+          </div>
+        )}
       </div>
     </div>
   );

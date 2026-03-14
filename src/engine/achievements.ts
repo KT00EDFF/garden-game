@@ -227,12 +227,32 @@ export const achievements: Achievement[] = [
     check: (g) => g.weatherChecked === true,
   },
   {
+    id: "herb_garden",
+    name: "Herb Garden",
+    description: "Plant 3 different herbs",
+    emoji: "🌿",
+    xp: 25,
+    check: (g) => {
+      const herbs = ["basil", "cilantro", "parsley", "dill"];
+      const planted = new Set(g.plantings.map((p) => p.plantId));
+      return herbs.filter((h) => planted.has(h)).length >= 3;
+    },
+  },
+  {
     id: "seed_collector",
     name: "Seed Collector",
     description: "Track 5 different seeds in inventory",
     emoji: "\u{1F330}",
     xp: 20,
     check: (g) => (g.seedInventory || []).length >= 5,
+  },
+  {
+    id: "garden_architect",
+    name: "Garden Architect",
+    description: "Have 5+ beds in your garden",
+    emoji: "🏗️",
+    xp: 25,
+    check: (g) => g.beds.length >= 5,
   },
 ];
 

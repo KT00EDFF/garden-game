@@ -82,3 +82,15 @@ body {
 .animate-harvest {
   animation: harvest-glow 2s ease-in-out infinite;
 }
+
+.drop-zone {
+  outline: 2px dashed rgba(255, 215, 0, 0.5);
+  outline-offset: -2px;
+}
+.drop-zone-swap {
+  outline: 2px dashed rgba(107, 203, 119, 0.5);
+  outline-offset: -2px;
+}
+.dragging-source {
+  opacity: 0.4;
+}

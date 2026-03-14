@@ -13,9 +13,15 @@ interface BedGridProps {
   lastFrostDate?: string;
   firstFrostDate?: string;
   rotationHistory?: RotationEntry[];
+  isDragging?: boolean;
   onTileClick: (bedId: string, tileX: number, tileY: number) => void;
   onTileRightClick: (bedId: string, tileX: number, tileY: number) => void;
   onPlantTap: (bedId: string, tileX: number, tileY: number) => void;
+  onDragStart?: (bedId: string, tileX: number, tileY: number) => void;
+  onDragEnd?: () => void;
+  onDrop?: (bedId: string, tileX: number, tileY: number) => void;
+  onPaletteDrop?: (plantId: string, bedId: string, tileX: number, tileY: number) => void;
+  onDragOver?: (bedId: string, tileX: number, tileY: number) => void;
 }
 
 const sunIcons: Record<SunRequirement, string> = {
@@ -32,9 +38,15 @@ export function BedGrid({
   lastFrostDate,
   firstFrostDate,
   rotationHistory = [],
+  isDragging = false,
   onTileClick,
   onTileRightClick,
   onPlantTap,
+  onDragStart,
+  onDragEnd,
+  onDrop,
+  onPaletteDrop,
+  onDragOver,
 }: BedGridProps) {
   const bedPlantings = plantings.filter((p) => p.bedId === bed.id);
   const isRaised = bed.type === "raised";
@@ -107,9 +119,14 @@ export function BedGrid({
         if (previewStatus === "bad") previewClass = "hover:ring-2 hover:ring-red-400/50";
       }
 
+      // Determine drag-related CSS classes for this tile
+      const showDropZone = isDragging && !plant;
+      const showSwapZone = isDragging && !!plant;
+
       tiles.push(
         <button
           key={`${x}-${y}`}
+          draggable={!!plant}
           className={`
             aspect-square flex items-center justify-center text-lg relative
             transition-all duration-100
@@ -118,6 +135,9 @@ export function BedGrid({
               : `hover:brightness-125 ${previewClass}`
             }
             ${selectedPlantId && !plant ? "cursor-crosshair" : "cursor-pointer"}
+            ${plant ? "cursor-grab" : ""}
+            ${showDropZone ? "drop-zone" : ""}
+            ${showSwapZone ? "drop-zone-swap" : ""}
           `}
           style={{
             backgroundColor: plant ? plant.color : isRaised ? "#8B6914" : "#6B5B3A",
@@ -141,6 +161,43 @@ export function BedGrid({
           onContextMenu={(e) => {
             e.preventDefault();
             onTileRightClick(bed.id, x, y);
+          }}
+          onDragStart={(e) => {
+            if (!plant) {
+              e.preventDefault();
+              return;
+            }
+            e.dataTransfer.setData(
+              "application/json",
+              JSON.stringify({ type: "tile", bedId: bed.id, tileX: x, tileY: y })
+            );
+            e.dataTransfer.effectAllowed = "move";
+            (e.currentTarget as HTMLElement).classList.add("dragging-source");
+            onDragStart?.(bed.id, x, y);
+          }}
+          onDragEnd={(e) => {
+            (e.currentTarget as HTMLElement).classList.remove("dragging-source");
+            onDragEnd?.();
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = isDragging ? "move" : "copy";
+            if (isDragging) {
+              onDragOver?.(bed.id, x, y);
+            }
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            try {
+              const data = JSON.parse(e.dataTransfer.getData("application/json"));
+              if (data.type === "palette" && data.plantId) {
+                onPaletteDrop?.(data.plantId, bed.id, x, y);
+                return;
+              }
+            } catch {
+              // Not JSON or missing — fall through to tile drop
+            }
+            onDrop?.(bed.id, x, y);
           }}
         >
           {plant && stageVisuals && (
