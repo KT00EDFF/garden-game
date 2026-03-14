@@ -133,12 +133,12 @@ garden-game/
 ### Phase 5: Polish + PWA
 **Goal**: Feels like a finished app, works on your phone
 
-- [ ] PWA manifest + service worker (vite-plugin-pwa)
-- [ ] App icon (pixel art garden sprite)
-- [ ] Multiple saved plans ("2026 Spring", "2026 Fall")
-- [ ] Settings page: zone, last/first frost date override, bed sun exposure
-- [ ] Empty state: onboarding flow that asks zone + bed setup
-- [ ] Touch-friendly: large tap targets, swipe between beds on mobile
+- [x] PWA manifest + service worker (vite-plugin-pwa)
+- [x] App icon (pixel art garden sprite)
+- [x] Multiple saved plans ("2026 Spring", "2026 Fall")
+- [x] Settings page: zone, last/first frost date override, bed sun exposure
+- [x] Empty state: onboarding flow for first-time visitors
+- [x] Touch-friendly: large tap targets, responsive layout
 
 ---
 

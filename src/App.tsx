@@ -7,6 +7,9 @@ import { SeasonTimeline } from "./components/SeasonTimeline";
 import { Alerts } from "./components/Alerts";
 import { Settings } from "./components/Settings";
 import { PlantCard } from "./components/PlantCard";
+import { Onboarding } from "./components/Onboarding";
+
+const ONBOARDING_KEY = "garden-game-onboarded";
 
 function App() {
   const {
@@ -26,6 +29,9 @@ function App() {
   } = useGarden();
 
   const [showSettings, setShowSettings] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => !localStorage.getItem(ONBOARDING_KEY)
+  );
   const [inspectedTile, setInspectedTile] = useState<{
     bedId: string;
     tileX: number;
@@ -113,6 +119,15 @@ function App() {
           garden={garden}
           onUpdate={updateGarden}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showOnboarding && (
+        <Onboarding
+          onComplete={() => {
+            localStorage.setItem(ONBOARDING_KEY, "1");
+            setShowOnboarding(false);
+          }}
         />
       )}
 
