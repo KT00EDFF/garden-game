@@ -87,59 +87,51 @@ async function fetchWeather(zipCode: string): Promise<WeatherData> {
 }
 
 export function useWeather(zipCode: string): UseWeatherResult {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weather, setWeather] = useState<WeatherData | null>(
+    () => (zipCode ? getCached(zipCode) : null)
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-
-  const doFetch = useCallback(
-    (force = false) => {
-      if (!zipCode) return;
-
-      if (!force) {
-        const cached = getCached(zipCode);
-        if (cached) {
-          setWeather(cached);
-          setError(null);
-          return;
-        }
-      }
-
-      setLoading(true);
-      setError(null);
-
-      if (abortRef.current) abortRef.current.abort();
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      fetchWeather(zipCode)
-        .then((data) => {
-          if (controller.signal.aborted) return;
-          setCache(zipCode, data);
-          setWeather(data);
-          setError(null);
-        })
-        .catch((err) => {
-          if (controller.signal.aborted) return;
-          setError(err instanceof Error ? err.message : "Failed to fetch weather");
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) setLoading(false);
-        });
-    },
-    [zipCode]
-  );
+  const [fetchTrigger, setFetchTrigger] = useState(0);
 
   useEffect(() => {
-    doFetch();
+    if (!zipCode) return;
+    // On initial mount, skip if cache was loaded via useState initializer
+    if (fetchTrigger === 0 && getCached(zipCode)) return;
+
+    // Data-fetching effects legitimately need to set loading/error state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true);
+    setError(null);
+
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    fetchWeather(zipCode)
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        setCache(zipCode, data);
+        setWeather(data);
+        setError(null);
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        setError(err instanceof Error ? err.message : "Failed to fetch weather");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+
     return () => {
-      if (abortRef.current) abortRef.current.abort();
+      controller.abort();
     };
-  }, [doFetch]);
+  }, [zipCode, fetchTrigger]);
 
   const refresh = useCallback(() => {
-    doFetch(true);
-  }, [doFetch]);
+    setFetchTrigger((n) => n + 1);
+  }, []);
 
   return { weather, loading, error, refresh };
 }

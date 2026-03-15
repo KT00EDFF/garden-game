@@ -55,9 +55,13 @@ export function GardenView({
     [dragSource, onMovePlant]
   );
 
-  const handleDragOver = useCallback((_bedId: string, _tileX: number, _tileY: number) => {
-    // Could add hover-state tracking here in the future
-  }, []);
+  const handleDragOver = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (_bedId: string, _tileX: number, _tileY: number) => {
+      // Could add hover-state tracking here in the future
+    },
+    []
+  );
 
   const bedGridProps = (bed: typeof garden.beds[0]) => ({
     key: bed.id,
