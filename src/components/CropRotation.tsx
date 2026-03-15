@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { GardenState, RotationEntry } from "../types";
+import type { GardenState } from "../types";
 import { plantsById } from "../data/plants";
 import { getPlantFamily, checkRotationConflict } from "../data/plant-families";
 

@@ -35,8 +35,6 @@ export function useGarden() {
   // Auto-save on changes
   useEffect(() => {
     saveGarden(garden, activePlanId);
-    // Keep plan name in sync
-    setPlans(listPlans());
   }, [garden, activePlanId]);
 
   const placePlant = useCallback(

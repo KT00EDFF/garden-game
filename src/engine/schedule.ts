@@ -81,7 +81,7 @@ const FROST_TOLERANT_IDS = ["lettuce", "spinach", "kale"];
  */
 export function calculateFallSchedule(
   plant: Plant,
-  lastFrostDate: string,
+  _lastFrostDate: string,
   firstFrostDate: string
 ): PlantSchedule {
   const firstFrost = new Date(firstFrostDate);
