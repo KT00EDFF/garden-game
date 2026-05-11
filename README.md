@@ -1,73 +1,52 @@
-# React + TypeScript + Vite
+# Garden Planner
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Visual garden planner with a pixel-art aesthetic. Lay out raised beds, drop in plants from a palette, get companion-planting feedback, track harvests / seeds / achievements, and check the local 7-day weather and frost outlook. Plans are persisted to `localStorage` and the app installs as a PWA.
 
-Currently, two official plugins are available:
+Built with React 19 + TypeScript + Vite, styled with Tailwind CSS v4, and packaged for offline use via [`vite-plugin-pwa`](https://vite-pwa-org.netlify.app/). Weather data comes from [Open-Meteo](https://open-meteo.com/).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- Grid-based bed editor — drop plants into beds, with live companion / antagonist rings and spacing validation.
+- Multiple garden plans you can switch between (e.g. one per growing year).
+- Plant palette with categories (vegetable / fruit / herb / flower), maturity days, sun and sow requirements.
+- Achievements with XP, harvest log, seed inventory, and crop-rotation tracking.
+- Weather panel using the user's zip code, including a frost warning when freezing temps are forecast.
+- Export the current plan to a labeled PNG.
+- Offline-capable PWA with auto-update.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Getting started
 
-## Expanding the ESLint configuration
+Requires Node 22+ and npm 10+.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The dev server runs at <http://localhost:5173/>.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Scripts
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `npm run dev` — Vite dev server with HMR.
+- `npm run build` — `tsc -b && vite build`, outputs to `dist/`.
+- `npm run preview` — serve the built `dist/` locally.
+- `npm run lint` — ESLint on the project.
+
+## Project layout
+
 ```
+src/
+  components/   React UI (Header, BedGrid, PlantPalette, modals, etc.)
+  hooks/        useGarden, useWeather, useAchievements, …
+  data/         plant catalog, default garden config, achievement defs
+  utils/        companion rules, achievement evaluation, helpers
+  types.ts      shared TypeScript types
+```
+
+State lives in React + `localStorage`; there is no backend.
+
+## Configuration
+
+The weather panel reads the user's zip code from the in-app Settings modal and queries Open-Meteo's free geocoding + forecast endpoints. No API keys required.
+
+PWA manifest, theme color, and icons are configured in [`vite.config.ts`](./vite.config.ts).
