@@ -64,7 +64,6 @@ export function GardenView({
   );
 
   const bedGridProps = (bed: typeof garden.beds[0]) => ({
-    key: bed.id,
     bed,
     plantings: garden.plantings,
     selectedPlantId,
@@ -101,7 +100,7 @@ export function GardenView({
             {garden.beds
               .filter((b) => b.type === "raised" && b.widthFt * b.heightFt <= 6)
               .map((bed) => (
-                <BedGrid {...bedGridProps(bed)} />
+                <BedGrid key={bed.id} {...bedGridProps(bed)} />
               ))}
           </div>
         )}
@@ -112,7 +111,7 @@ export function GardenView({
             {garden.beds
               .filter((b) => b.type === "raised" && b.widthFt * b.heightFt > 6 && b.widthFt * b.heightFt <= 20)
               .map((bed) => (
-                <BedGrid {...bedGridProps(bed)} />
+                <BedGrid key={bed.id} {...bedGridProps(bed)} />
               ))}
           </div>
         )}
@@ -121,7 +120,7 @@ export function GardenView({
         {garden.beds
           .filter((b) => b.type === "raised" && b.widthFt * b.heightFt > 20)
           .map((bed) => (
-            <BedGrid {...bedGridProps(bed)} />
+            <BedGrid key={bed.id} {...bedGridProps(bed)} />
           ))}
 
         {/* In-ground beds stacked */}
@@ -130,7 +129,7 @@ export function GardenView({
             {garden.beds
               .filter((b) => b.type === "in-ground")
               .map((bed) => (
-                <BedGrid {...bedGridProps(bed)} />
+                <BedGrid key={bed.id} {...bedGridProps(bed)} />
               ))}
           </div>
         )}

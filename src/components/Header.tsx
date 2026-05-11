@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { GardenState } from "../types";
 import type { PlanMeta } from "../data/garden-config";
 import { ExportButton } from "./ExportButton";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 interface HeaderProps {
   garden: GardenState;
@@ -45,6 +46,9 @@ export function Header({
   onExport,
 }: HeaderProps) {
   const [showPlanMenu, setShowPlanMenu] = useState(false);
+  const [showNewPlanDialog, setShowNewPlanDialog] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<PlanMeta | null>(null);
+  const [showClearAllDialog, setShowClearAllDialog] = useState(false);
   const now = new Date();
   const lastFrost = new Date(garden.lastFrostDate);
   const firstFrost = new Date(garden.firstFrostDate);
@@ -65,11 +69,8 @@ export function Header({
   }
 
   function handleNewPlan() {
-    const name = prompt("Plan name:");
-    if (name?.trim()) {
-      onAddPlan(name.trim());
-    }
     setShowPlanMenu(false);
+    setShowNewPlanDialog(true);
   }
 
   return (
@@ -119,9 +120,8 @@ export function Header({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm(`Delete "${plan.name}"?`)) {
-                            onDeletePlan(plan.id);
-                          }
+                          setShowPlanMenu(false);
+                          setPlanToDelete(plan);
                         }}
                         className="text-danger/60 hover:text-danger ml-2 text-[8px]"
                         title="Delete plan"
@@ -180,13 +180,56 @@ export function Header({
             Settings
           </button>
           <button
-            onClick={onClearAll}
+            onClick={() => setShowClearAllDialog(true)}
             className="text-[7px] text-danger bg-danger/10 border border-danger/30 px-2 py-1 rounded-sm hover:bg-danger/20 transition-colors"
           >
             Clear All
           </button>
         </div>
       </div>
+
+      {showNewPlanDialog && (
+        <ConfirmDialog
+          title="New Garden Plan"
+          message="Create a new plan with empty beds. Switch between plans any time."
+          confirmLabel="Create"
+          inputLabel="Plan Name"
+          inputPlaceholder="My Garden 2027"
+          onConfirm={(name) => {
+            if (name) onAddPlan(name);
+            setShowNewPlanDialog(false);
+          }}
+          onCancel={() => setShowNewPlanDialog(false)}
+        />
+      )}
+
+      {planToDelete && (
+        <ConfirmDialog
+          title="Delete Plan"
+          message={`Permanently delete "${planToDelete.name}" and all of its plantings? This can't be undone.`}
+          confirmLabel="Delete"
+          destructive
+          onConfirm={() => {
+            onDeletePlan(planToDelete.id);
+            setPlanToDelete(null);
+          }}
+          onCancel={() => setPlanToDelete(null)}
+        />
+      )}
+
+      {showClearAllDialog && (
+        <ConfirmDialog
+          title="Clear All Plantings"
+          message="Remove every plant from this plan? Beds and settings will be kept. This can't be undone."
+          confirmLabel="Clear All"
+          destructive
+          onConfirm={() => {
+            onClearAll();
+            setShowClearAllDialog(false);
+          }}
+          onCancel={() => setShowClearAllDialog(false)}
+        />
+      )}
     </header>
   );
 }

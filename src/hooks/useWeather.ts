@@ -53,10 +53,14 @@ function cToF(c: number): number {
   return Math.round(c * 9 / 5 + 32);
 }
 
-async function fetchWeather(zipCode: string): Promise<WeatherData> {
+async function fetchWeather(
+  zipCode: string,
+  signal: AbortSignal
+): Promise<WeatherData> {
   // Step 1: geocode zip to lat/lon
   const geoRes = await fetch(
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(zipCode)}&count=1&language=en&format=json`
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(zipCode)}&count=1&language=en&format=json`,
+    { signal }
   );
   if (!geoRes.ok) throw new Error("Geocoding request failed");
   const geoData = await geoRes.json();
@@ -67,7 +71,8 @@ async function fetchWeather(zipCode: string): Promise<WeatherData> {
 
   // Step 2: fetch weather
   const weatherRes = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&current=temperature_2m,weather_code&timezone=auto&forecast_days=7`
+    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&current=temperature_2m,weather_code&timezone=auto&forecast_days=7`,
+    { signal }
   );
   if (!weatherRes.ok) throw new Error("Weather request failed");
   const w = await weatherRes.json();
@@ -109,7 +114,7 @@ export function useWeather(zipCode: string): UseWeatherResult {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    fetchWeather(zipCode)
+    fetchWeather(zipCode, controller.signal)
       .then((data) => {
         if (controller.signal.aborted) return;
         setCache(zipCode, data);
@@ -118,6 +123,7 @@ export function useWeather(zipCode: string): UseWeatherResult {
       })
       .catch((err) => {
         if (controller.signal.aborted) return;
+        if (err instanceof DOMException && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Failed to fetch weather");
       })
       .finally(() => {
