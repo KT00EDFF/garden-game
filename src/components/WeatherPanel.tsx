@@ -98,7 +98,7 @@ export function WeatherPanel({
         <span className="text-lg">{emoji}</span>
         <div>
           <div className="text-[10px] text-text-primary font-bold">
-            {weather.current.temp}\u00B0F
+            {weather.current.temp}°F
           </div>
           <div className="text-[7px] text-text-secondary">{label}</div>
         </div>
@@ -108,10 +108,10 @@ export function WeatherPanel({
       {hasFrost && (
         <div className="mb-2 p-1.5 border-l-2 border-l-danger bg-danger/10 rounded-r-sm">
           <div className="text-[8px] text-danger font-bold">
-            \u26A0 FROST WARNING
+            ⚠ FROST WARNING
           </div>
           <div className="text-[7px] text-text-secondary">
-            Temps at or below 32\u00B0F in the next 7 days
+            Temps at or below 32°F in the next 7 days
           </div>
         </div>
       )}
@@ -129,7 +129,7 @@ export function WeatherPanel({
           >
             <span className="w-[60px] truncate">{formatDay(date)}</span>
             <span className="text-text-primary">
-              {weather.daily.tempMax[i]}\u00B0/{weather.daily.tempMin[i]}\u00B0
+              {weather.daily.tempMax[i]}°/{weather.daily.tempMin[i]}°
             </span>
             <span className="w-[28px] text-right">
               {weather.daily.precip[i] > 0

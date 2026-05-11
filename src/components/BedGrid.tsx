@@ -152,9 +152,9 @@ export function BedGrid({
               : "Select a plant first"
           }
           onClick={() => {
-            if (plant && !selectedPlantId) {
+            if (plant) {
               onPlantTap(bed.id, x, y);
-            } else {
+            } else if (selectedPlantId) {
               onTileClick(bed.id, x, y);
             }
           }}
