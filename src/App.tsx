@@ -84,6 +84,7 @@ function App() {
   useEffect(() => {
     const { unlocked, newlyUnlocked } = evaluateAchievements(garden, unlockedAchievements);
     if (newlyUnlocked.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUnlockedAchievements(unlocked);
       saveUnlocked(unlocked);
       setToastQueue((prev) => [...prev, ...newlyUnlocked]);
