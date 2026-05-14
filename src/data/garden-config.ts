@@ -1,4 +1,4 @@
-import type { BedConfig, GardenState } from "../types";
+import type { BedConfig, GardenState, GreenhouseConfig } from "../types";
 
 export const defaultBeds: BedConfig[] = [
   { id: "bed-1", name: "Raised Bed 1", type: "raised", widthFt: 5, heightFt: 3, posX: 0, posY: 0 },
@@ -12,14 +12,27 @@ export const defaultBeds: BedConfig[] = [
   { id: "bed-9", name: "In-Ground 3", type: "in-ground", widthFt: 16, heightFt: 2, posX: 0, posY: 13 },
 ];
 
+export const defaultGreenhouseBeds: BedConfig[] = [
+  { id: "gh-shelf-1", name: "Shelf 1", type: "raised", widthFt: 4, heightFt: 2, posX: 2, posY: 2, location: "greenhouse", greenhouseType: "shelf" },
+  { id: "gh-shelf-2", name: "Shelf 2", type: "raised", widthFt: 4, heightFt: 2, posX: 10, posY: 2, location: "greenhouse", greenhouseType: "shelf" },
+  { id: "gh-station-1", name: "Grow Station 1", type: "raised", widthFt: 3, heightFt: 2, posX: 2, posY: 7, location: "greenhouse", greenhouseType: "grow-station", hasGrowLight: true },
+  { id: "gh-station-2", name: "Grow Station 2", type: "raised", widthFt: 3, heightFt: 2, posX: 9, posY: 7, location: "greenhouse", greenhouseType: "grow-station", hasGrowLight: true },
+];
+
+export const defaultGreenhouseConfig: GreenhouseConfig = {
+  widthTiles: 16,
+  heightTiles: 12,
+};
+
 export const defaultGardenState: GardenState = {
   name: "My Garden 2026",
   zone: "6a",
   zipCode: "60068",
   lastFrostDate: "2026-04-28",
   firstFrostDate: "2026-10-12",
-  beds: defaultBeds,
+  beds: [],
   plantings: [],
+  greenhouse: defaultGreenhouseConfig,
 };
 
 const STORAGE_KEY = "garden-game-state";
@@ -71,13 +84,32 @@ export function setActivePlanId(id: string): void {
   localStorage.setItem(ACTIVE_PLAN_KEY, id);
 }
 
+/** Migrate legacy garden state to include RPG fields */
+function migrateState(state: GardenState): GardenState {
+  // Add greenhouse config if missing
+  if (!state.greenhouse) {
+    state.greenhouse = defaultGreenhouseConfig;
+  }
+  // Add greenhouse beds if none exist
+  const hasGhBeds = state.beds.some(b => b.location === "greenhouse");
+  if (!hasGhBeds) {
+    state.beds = [...state.beds, ...defaultGreenhouseBeds];
+  }
+  // Ensure all beds have location field
+  state.beds = state.beds.map(b => ({
+    ...b,
+    location: b.location ?? "outdoor",
+  }));
+  return state;
+}
+
 export function loadGarden(planId?: string): GardenState {
   const id = planId || getActivePlanId();
   if (id) {
     const raw = localStorage.getItem(planStorageKey(id));
     if (raw) {
       try {
-        return JSON.parse(raw);
+        return migrateState(JSON.parse(raw));
       } catch { /* fall through */ }
     }
   }
