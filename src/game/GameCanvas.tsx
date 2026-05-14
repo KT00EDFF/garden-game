@@ -134,7 +134,7 @@ export function GameCanvas({
     let lastGardenJson = JSON.stringify(gardenRef.current.beds) + (gardenRef.current.greenhouseWorldX ?? "") + (gardenRef.current.greenhouseWorldY ?? "");
     let queuedDirection: import("./types").Direction | null = null;
 
-    function setHint(text: string, worldX: number, worldY: number, durationMs = 1800) {
+    function setHint(text: string, worldX: number, worldY: number, durationMs = 3000) {
       hintRef.current = { text, worldX, worldY, until: performance.now() + durationMs };
     }
 
