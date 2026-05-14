@@ -369,7 +369,7 @@ export function useGarden() {
   }, []);
 
   const addBed = useCallback(
-    (name: string, type: BedType, width: number, height: number) => {
+    (name: string, type: BedType, width: number, height: number, worldX?: number, worldY?: number, location?: "outdoor" | "greenhouse", greenhouseType?: "shelf" | "grow-station", hasGrowLight?: boolean) => {
       setGarden((prev) => ({
         ...prev,
         beds: [
@@ -380,9 +380,14 @@ export function useGarden() {
             type,
             widthFt: width,
             heightFt: height,
-            posX: 0,
-            posY: 0,
+            posX: worldX ?? 0,
+            posY: worldY ?? 0,
+            worldX,
+            worldY,
             sunExposure: "full" as const,
+            location: location ?? "outdoor",
+            greenhouseType,
+            hasGrowLight,
           },
         ],
       }));

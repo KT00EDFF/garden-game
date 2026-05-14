@@ -1,31 +1,27 @@
 import { useState, useEffect, useCallback } from "react";
 import { useGarden } from "./hooks/useGarden";
 import { useWeather } from "./hooks/useWeather";
-import { Header } from "./components/Header";
-import { GardenView } from "./components/GardenView";
-import { PlantPalette } from "./components/PlantPalette";
-import { SeasonTimeline } from "./components/SeasonTimeline";
-import { Alerts } from "./components/Alerts";
-import { WeatherPanel } from "./components/WeatherPanel";
 import { Settings } from "./components/Settings";
 import { PlantCard } from "./components/PlantCard";
-import { Onboarding } from "./components/Onboarding";
 import { Achievements } from "./components/Achievements";
 import { AchievementToast } from "./components/AchievementToast";
 import { HarvestLog } from "./components/HarvestLog";
 import { SeedInventory } from "./components/SeedInventory";
 import { BedEditor } from "./components/BedEditor";
 import { CropRotation } from "./components/CropRotation";
+import { CharacterCreation } from "./components/CharacterCreation";
+import { GameScreen } from "./components/GameScreen";
+import { defaultGreenhouseConfig } from "./data/garden-config";
+import type { CharacterConfig } from "./types";
 import {
   evaluateAchievements,
   loadUnlocked,
   saveUnlocked,
-  getTotalXP,
   type Achievement,
   type UnlockedAchievement,
 } from "./engine/achievements";
 
-const ONBOARDING_KEY = "garden-game-onboarded";
+type AppScene = "character-creation" | "game";
 
 function App() {
   const {
@@ -33,8 +29,7 @@ function App() {
     selectedPlantId,
     setSelectedPlantId,
     placePlant,
-    placePlantById,
-    movePlant,
+    // placePlantById and movePlant available but not needed until drag support is added
     removePlant,
     clearAll,
     updateGarden,
@@ -68,15 +63,17 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weather]);
 
+  // Determine initial scene based on whether character exists
+  const [scene, setScene] = useState<AppScene>(() =>
+    garden.character ? "game" : "character-creation"
+  );
+
   const [showSettings, setShowSettings] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showHarvestLog, setShowHarvestLog] = useState(false);
   const [showRotation, setShowRotation] = useState(false);
   const [showSeedInventory, setShowSeedInventory] = useState(false);
   const [showBedEditor, setShowBedEditor] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(
-    () => !localStorage.getItem(ONBOARDING_KEY)
-  );
   const [unlockedAchievements, setUnlockedAchievements] = useState<UnlockedAchievement[]>(loadUnlocked);
   const [toastQueue, setToastQueue] = useState<Achievement[]>([]);
 
@@ -95,6 +92,7 @@ function App() {
   const dismissToast = useCallback(() => {
     setToastQueue((prev) => prev.slice(1));
   }, []);
+
   const [inspectedTile, setInspectedTile] = useState<{
     bedId: string;
     tileX: number;
@@ -114,93 +112,59 @@ function App() {
     ? garden.beds.find((b) => b.id === inspectedTile.bedId)
     : undefined;
 
+  const handleCharacterCreation = useCallback((config: CharacterConfig) => {
+    updateGarden({ character: config, name: config.name + "'s Farm" });
+    setScene("game");
+  }, [updateGarden]);
+
+  const handlePlaceGreenhouse = useCallback((worldX: number, worldY: number) => {
+    updateGarden({ greenhouseWorldX: worldX, greenhouseWorldY: worldY });
+  }, [updateGarden]);
+
+  const characterConfig = garden.character || { gender: "female" as const, skinTone: "light" as const, name: "Farmer" };
+  const greenhouseConfig = garden.greenhouse || defaultGreenhouseConfig;
+
+  // --- Character Creation Screen ---
+  if (scene === "character-creation") {
+    return <CharacterCreation onComplete={handleCharacterCreation} />;
+  }
+
+  // --- Game Screen ---
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header
+    <>
+      <GameScreen
         garden={garden}
-        onClearAll={clearAll}
+        characterConfig={characterConfig}
+        greenhouseConfig={greenhouseConfig}
+        selectedPlantId={selectedPlantId}
+        onSelectPlant={setSelectedPlantId}
+        onPlacePlant={placePlant}
+        onRemovePlant={removePlant}
+        onPlantTap={(bedId, tileX, tileY) => setInspectedTile({ bedId, tileX, tileY })}
+        spacingWarning={spacingWarning}
+        weather={weather}
+        weatherLoading={weatherLoading}
+        weatherError={weatherError}
+        refreshWeather={refreshWeather}
         onOpenSettings={() => setShowSettings(true)}
         onOpenAchievements={() => setShowAchievements(true)}
         onOpenHarvestLog={() => setShowHarvestLog(true)}
         onOpenSeedInventory={() => setShowSeedInventory(true)}
         onOpenRotation={() => setShowRotation(true)}
         onOpenBedEditor={() => setShowBedEditor(true)}
-        bedCount={garden.beds.length}
-        seedCount={(garden.seedInventory || []).length}
-        totalXP={getTotalXP(unlockedAchievements)}
-        harvestCount={(garden.harvests || []).length}
+        onClearAll={clearAll}
         plans={plans}
         activePlanId={activePlanId}
         onSwitchPlan={switchPlan}
         onAddPlan={addPlan}
         onDeletePlan={removePlan}
-        onExport={() =>
-          updateGarden({ exportCount: (garden.exportCount || 0) + 1 })
-        }
+        unlockedAchievements={unlockedAchievements}
+        onExport={() => updateGarden({ exportCount: (garden.exportCount || 0) + 1 })}
+        onAddBed={addBed}
+        onPlaceGreenhouse={handlePlaceGreenhouse}
       />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full p-3">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Left: Plant Palette */}
-          <aside className="lg:w-56 shrink-0 order-2 lg:order-1">
-            <div className="lg:sticky lg:top-3">
-              <PlantPalette
-                selectedPlantId={selectedPlantId}
-                onSelect={setSelectedPlantId}
-              />
-            </div>
-          </aside>
-
-          {/* Center: Garden Grid */}
-          <section className="flex-1 order-1 lg:order-2">
-            {spacingWarning && (
-              <div className="mb-2 p-2 bg-danger/10 border border-danger/30 rounded-sm text-[8px] text-danger">
-                ⚠ {spacingWarning}
-              </div>
-            )}
-            <GardenView
-              garden={garden}
-              selectedPlantId={selectedPlantId}
-              onTileClick={placePlant}
-              onTileRightClick={removePlant}
-              onMovePlant={movePlant}
-              onPlacePlantById={placePlantById}
-              onPlantTap={(bedId, tileX, tileY) =>
-                setInspectedTile({ bedId, tileX, tileY })
-              }
-            />
-
-            {/* Timeline below garden */}
-            <div className="mt-4">
-              <SeasonTimeline garden={garden} />
-            </div>
-          </section>
-
-          {/* Right: Weather + Alerts */}
-          <aside className="lg:w-56 shrink-0 order-3">
-            <div className="lg:sticky lg:top-3 flex flex-col gap-3">
-              <WeatherPanel
-                weather={weather}
-                loading={weatherLoading}
-                error={weatherError}
-                onRefresh={refreshWeather}
-                hasZipCode={!!garden.zipCode}
-              />
-              <Alerts
-                garden={garden}
-                frostWarning={!!weather && weather.daily.tempMin.some((t) => t <= 32)}
-              />
-            </div>
-          </aside>
-        </div>
-      </main>
-
-      <footer className="bg-panel border-t border-text-secondary/20 p-2 text-center">
-        <p className="text-[6px] text-text-secondary">
-          Tap a plant, then tap a tile to place it. Tap a placed plant to inspect. Right-click to remove. Auto-saves.
-        </p>
-      </footer>
-
+      {/* Modal overlays */}
       {showSettings && (
         <Settings
           garden={garden}
@@ -262,15 +226,6 @@ function App() {
         />
       )}
 
-      {showOnboarding && (
-        <Onboarding
-          onComplete={() => {
-            localStorage.setItem(ONBOARDING_KEY, "1");
-            setShowOnboarding(false);
-          }}
-        />
-      )}
-
       {inspectedPlanting && inspectedBed && (
         <PlantCard
           placed={inspectedPlanting}
@@ -293,7 +248,7 @@ function App() {
           onRemoveSuccession={removeSuccession}
         />
       )}
-    </div>
+    </>
   );
 }
 
