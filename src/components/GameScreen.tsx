@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { GardenState, CharacterConfig, GreenhouseConfig, BedType } from "../types";
 import type { PlanMeta } from "../data/garden-config";
 import type { UnlockedAchievement } from "../engine/achievements";
@@ -115,11 +115,17 @@ export function GameScreen({
 
   const hasGreenhouse = garden.greenhouseWorldX != null;
 
-  // Listen for ESC to cancel build
-  // (InputHandler already captures ESC for the canvas, but for overlay we handle it here)
+  useEffect(() => {
+    if (buildStep === "idle") return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") cancelBuild();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [buildStep, cancelBuild]);
 
   return (
-    <div className="flex flex-col h-screen" onKeyDown={(e) => { if (e.key === "Escape") cancelBuild(); }}>
+    <div className="flex flex-col h-screen">
       {/* Top bar */}
       <header className="bg-panel border-b border-text-secondary/20 px-3 py-2 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
