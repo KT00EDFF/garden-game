@@ -57,6 +57,7 @@ export function GameCanvas({
   const buildGhostRef = useRef(buildGhost);
   const onBuildPlaceRef = useRef(onBuildPlace);
   const mouseWorldRef = useRef<{ x: number; y: number } | null>(null);
+  const hintRef = useRef<{ text: string; worldX: number; worldY: number; until: number } | null>(null);
 
   // Keep refs in sync via effect
   useEffect(() => {
@@ -131,6 +132,11 @@ export function GameCanvas({
     rebuildMap();
 
     let lastGardenJson = JSON.stringify(gardenRef.current.beds) + (gardenRef.current.greenhouseWorldX ?? "") + (gardenRef.current.greenhouseWorldY ?? "");
+    let queuedDirection: import("./types").Direction | null = null;
+
+    function setHint(text: string, worldX: number, worldY: number, durationMs = 1800) {
+      hintRef.current = { text, worldX, worldY, until: performance.now() + durationMs };
+    }
 
     input.attach(canvas);
     resizeCanvas();
@@ -164,7 +170,10 @@ export function GameCanvas({
 
       // Character movement
       if (!char.walking) {
-        const dir = input.getDirection();
+        const keyDir = input.getDirection();
+        // Keyboard input cancels any queued tap-to-walk step.
+        const dir = keyDir ?? queuedDirection;
+        if (keyDir) queuedDirection = null;
         if (dir) {
           const dx = DIR_DX[dir];
           const dy = DIR_DY[dir];
@@ -221,6 +230,9 @@ export function GameCanvas({
       const click = input.consumeClick();
       const rightClick = input.consumeRightClick();
 
+      // Consume queued step once we actually move (or the target tile is blocked).
+      if (char.walking) queuedDirection = null;
+
       // Build mode: click places the ghost
       if (click && buildGhostRef.current && currentScene === "outdoor") {
         const ghost = buildGhostRef.current;
@@ -246,7 +258,23 @@ export function GameCanvas({
       const tileY = Math.floor(worldY / TILE_SIZE);
 
       const tile = activeMap[tileY]?.[tileX];
-      if (!tile || !tile.bedId) return;
+      if (!tile) return;
+
+      // Tap-to-walk: tapping a walkable, non-bed tile queues one step toward it.
+      // (Right-click is reserved for plant removal; only left-tap moves.)
+      if (!tile.bedId && tile.walkable && !isRightClick) {
+        const dx = tileX - char.tileX;
+        const dy = tileY - char.tileY;
+        if (dx === 0 && dy === 0) return;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          queuedDirection = dx > 0 ? "right" : "left";
+        } else {
+          queuedDirection = dy > 0 ? "down" : "up";
+        }
+        return;
+      }
+
+      if (!tile.bedId) return;
 
       if (isRightClick) {
         onRemovePlantRef.current(tile.bedId, tile.bedTileX!, tile.bedTileY!);
@@ -258,6 +286,12 @@ export function GameCanvas({
         );
         if (planting) {
           onPlantTapRef.current(tile.bedId, tile.bedTileX!, tile.bedTileY!);
+        } else {
+          setHint(
+            "Pick a plant on the left",
+            tileX * TILE_SIZE + TILE_SIZE / 2,
+            tileY * TILE_SIZE - 4,
+          );
         }
       }
     }
@@ -303,10 +337,24 @@ export function GameCanvas({
       }
 
       // Draw build ghost
-      if (buildGhostRef.current && currentScene === "outdoor" && mouseWorldRef.current) {
+      if (buildGhostRef.current && currentScene === "outdoor") {
         const ghost = buildGhostRef.current;
-        const mx = mouseWorldRef.current.x;
-        const my = mouseWorldRef.current.y;
+        let mx: number;
+        let my: number;
+        if (mouseWorldRef.current) {
+          mx = mouseWorldRef.current.x;
+          my = mouseWorldRef.current.y;
+        } else {
+          // Fallback: place ghost just in front of the character so the user
+          // always has a visible preview (e.g. on touch devices, or before
+          // the mouse has been moved over the canvas).
+          const gw0 = ghost.type === "greenhouse" ? GH_BUILDING_W : ghost.width;
+          const gh0 = ghost.type === "greenhouse" ? GH_BUILDING_H : ghost.height;
+          const facingDx = DIR_DX[char.direction];
+          const facingDy = DIR_DY[char.direction];
+          mx = (char.tileX + facingDx) * TILE_SIZE + TILE_SIZE / 2 - (gw0 * TILE_SIZE) / 2;
+          my = (char.tileY + facingDy) * TILE_SIZE + TILE_SIZE / 2 - (gh0 * TILE_SIZE) / 2;
+        }
         const tileX = Math.floor(mx / TILE_SIZE);
         const tileY = Math.floor(my / TILE_SIZE);
         const gw = ghost.type === "greenhouse" ? GH_BUILDING_W : ghost.width;
@@ -350,6 +398,37 @@ export function GameCanvas({
         ctx.fillText(label, px + pw / 2, py - 6);
         if (!valid) {
           ctx.fillText("Can't place here", px + pw / 2, py + ph + 12);
+        }
+      }
+
+      // Floating hint (e.g. "Pick a plant on the left")
+      const hint = hintRef.current;
+      if (hint) {
+        const now = performance.now();
+        const remaining = hint.until - now;
+        if (remaining <= 0) {
+          hintRef.current = null;
+        } else {
+          const alpha = Math.min(1, remaining / 600);
+          ctx.font = '7px "Press Start 2P", monospace';
+          ctx.textAlign = "center";
+          const padX = 6;
+          const padY = 4;
+          const metrics = ctx.measureText(hint.text);
+          const boxW = Math.ceil(metrics.width) + padX * 2;
+          const boxH = 14;
+          const bx = hint.worldX - boxW / 2;
+          const by = hint.worldY - boxH;
+          ctx.globalAlpha = 0.85 * alpha;
+          ctx.fillStyle = "#1a3a0e";
+          ctx.fillRect(bx, by, boxW, boxH);
+          ctx.globalAlpha = alpha;
+          ctx.strokeStyle = "#f0e6d3";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(bx + 0.5, by + 0.5, boxW - 1, boxH - 1);
+          ctx.fillStyle = "#f0e6d3";
+          ctx.fillText(hint.text, hint.worldX, by + boxH - padY);
+          ctx.globalAlpha = 1;
         }
       }
 
