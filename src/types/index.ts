@@ -34,6 +34,12 @@ export interface BedConfig {
   posX: number; // position in garden layout grid
   posY: number;
   sunExposure?: SunRequirement;
+  // RPG world fields
+  worldX?: number; // world tile X (outdoor only, defaults to posX)
+  worldY?: number; // world tile Y (outdoor only, defaults to posY)
+  location?: "outdoor" | "greenhouse"; // defaults to "outdoor"
+  greenhouseType?: "shelf" | "grow-station";
+  hasGrowLight?: boolean;
 }
 
 export interface PlacedPlant {
@@ -76,6 +82,21 @@ export interface SeedInventoryItem {
   notes?: string;
 }
 
+// --- RPG Character & Greenhouse ---
+
+export interface CharacterConfig {
+  gender: "male" | "female";
+  skinTone: "light" | "dark";
+  name: string;
+}
+
+export interface GreenhouseConfig {
+  widthTiles: number;
+  heightTiles: number;
+}
+
+// --- Garden State ---
+
 export interface GardenState {
   name: string;
   zone: string;
@@ -90,4 +111,9 @@ export interface GardenState {
   seedInventory?: SeedInventoryItem[];
   exportCount?: number;
   weatherChecked?: boolean;
+  // RPG fields
+  character?: CharacterConfig;
+  greenhouse?: GreenhouseConfig;
+  greenhouseWorldX?: number;
+  greenhouseWorldY?: number;
 }
