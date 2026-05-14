@@ -174,6 +174,17 @@ export function CharacterCreation({ onComplete }: Props) {
         >
           Start Your Farm
         </button>
+
+        {/* Quick tips */}
+        <div className="mt-5 pt-4 border-t border-text-secondary/20">
+          <p className="text-[7px] text-accent mb-2">GETTING STARTED</p>
+          <ul className="text-[7px] text-text-secondary space-y-1 leading-relaxed">
+            <li>• Move with arrow keys or WASD</li>
+            <li>• Build beds and a greenhouse from the bottom toolbar</li>
+            <li>• Pick a plant on the left, click a bed tile to plant it</li>
+            <li>• Right-click a plant to remove it; left-click to inspect</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
