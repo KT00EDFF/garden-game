@@ -22,7 +22,9 @@ function weatherDescription(code: number): { label: string; emoji: string } {
 
 function formatDay(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
-  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const weekday = d.toLocaleDateString("en-US", { weekday: "short" });
+  const monthDay = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return `${weekday} ${monthDay}`;
 }
 
 export function WeatherPanel({
@@ -127,7 +129,7 @@ export function WeatherPanel({
                 : "text-text-secondary"
             }`}
           >
-            <span className="w-[60px] truncate">{formatDay(date)}</span>
+            <span className="w-[78px] truncate">{formatDay(date)}</span>
             <span className="text-text-primary">
               {weather.daily.tempMax[i]}°/{weather.daily.tempMin[i]}°
             </span>
